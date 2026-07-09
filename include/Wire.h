@@ -5,7 +5,7 @@
 #include <memory>
 #include <cmath>
 #include <algorithm>
-#include "Constants.hpp"
+#include "Constants.h"
 
 // Forward declaration
 class Pin;

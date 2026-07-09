@@ -1,8 +1,0 @@
-compilar (MINGW64):
-    make
-
-compilar (CMD/PowerShell):
-    build.bat
-
-executar:
-    ./simulator.exe

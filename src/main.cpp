@@ -1,8 +1,8 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <string>
-#include "Workbench.hpp"
-#include "Constants.hpp"
+#include "Workbench.h"
+#include "Constants.h"
 
 int main() {
     sf::RenderWindow window(sf::VideoMode({1200, 800}), "Logic Gate Simulator");

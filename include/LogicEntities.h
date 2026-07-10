@@ -1,7 +1,6 @@
 #ifndef LOGIC_ENTITIES_HPP
 #define LOGIC_ENTITIES_HPP
-
-#include "Gate.hpp"
+#include "Gate.h"
 
 class ANDGate : public Gate {
 public:

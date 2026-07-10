@@ -87,9 +87,7 @@ void Workbench::draw(sf::RenderWindow& window) {
         window.draw(line, 2, sf::PrimitiveType::Lines);
     }
 
-    if (isSelecting) {
-        window.draw(selectionRect);
-    }
+    if (isSelecting) window.draw(selectionRect);
 
     window.draw(menuBar);
     window.draw(menuButton);

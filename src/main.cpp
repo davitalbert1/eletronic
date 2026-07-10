@@ -18,20 +18,14 @@ int main() {
 
     while (window.isOpen()) {
         while (const std::optional event = window.pollEvent()) {
-            if (event->is<sf::Event::Closed>())
-                window.close();
-
-            // Events are now fully handled in workbench
+            if (event->is<sf::Event::Closed>()) window.close();
             workbench.handleEvent(*event, window);
         }
 
         // Logic propagation loop
         workbench.updatePropagation();
-
         window.clear(Theme::Background);
-        
         workbench.draw(window);
-
         window.display();
     }
 

@@ -6,9 +6,7 @@
 #include <cmath>
 #include <algorithm>
 #include "Constants.h"
-
-// Forward declaration
-class Pin;
+#include "Gate.h"
 
 class Wire {
 public:

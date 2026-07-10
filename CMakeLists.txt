@@ -21,5 +21,5 @@ add_executable(simulator ${SOURCES})
 target_include_directories(simulator PRIVATE include)
 
 # Linkar bibliotecas SFML
-find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
-target_link_libraries(simulator PRIVATE sfml-graphics sfml-window sfml-system)
+find_package(SFML 3.0 COMPONENTS Graphics Window System REQUIRED)
+target_link_libraries(simulator PRIVATE SFML::Graphics SFML::Window SFML::System)

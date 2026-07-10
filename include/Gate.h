@@ -42,9 +42,11 @@ public:
 
     void draw(sf::RenderWindow& window);
     void setPosition(sf::Vector2f pos);
+    void setRotation(float angle);
+    float getRotation() const;
     void updateLabelPos();
     bool contains(sf::Vector2f point) const;
-    
+
     sf::Vector2f getPosition() const;
     GateType getType() const;
 

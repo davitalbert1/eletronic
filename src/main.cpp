@@ -17,9 +17,9 @@ int main() {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    
+
     ImGui::StyleColorsDark();
-    
+
     // Initialize ImGui backends
     sf::WindowHandle hwnd = window.getNativeHandle();
     ImGui_ImplWin32_Init(hwnd);
@@ -44,13 +44,18 @@ int main() {
             workbench.handleEvent(*event, window);
         }
 
+        // Update animations and UI
+        static sf::Clock clock;
+        float deltaTime = clock.restart().asSeconds();
+        workbench.update(deltaTime);
+        
         // Logic propagation loop
         workbench.updatePropagation();
         workbench.renderImGui();
-        
+
         window.clear(Theme::Background);
         workbench.draw(window);
-        
+
         // Render ImGui on top
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

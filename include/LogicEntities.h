@@ -62,7 +62,9 @@ public:
     float getExtraData() const override {
         return outputs[0].state ? 1.0f : 0.0f;
     }
-    void setExtraData(float data) override { setState(data > 0.5f); }
+    void setExtraData(float data) override {
+        setState(data > 0.5f);
+    }
     void updateLogic() override {} // State is manual
 };
 
@@ -95,7 +97,7 @@ public:
         return interval;
     }
     void setExtraData(float data) override { 
-        interval = data; 
+        interval = data;
         updateLabel();
     }
 private:

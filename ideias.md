@@ -5,5 +5,6 @@ faça também que seja possível importar essa linguagem para o ambiente, garant
 crie também uma pequena documentação explicando os itens desta documentação.
 essa linguagem deve comportar estruturas complexas e compeltas reais.
 
-Use ImGui para a interface.
-refatore a Interface, fazendo com que ela fique mais legível e que seja mais parecida com o app "digital logic sim", mantendo visual único.
+itens para adicionar: memória ROM, display
+
+ao iniciar app, deve abrir página perguntando sobre qual projeto que quer abrir, antes de abrir algum projeto. garanta que o salvamento e o carregamento do projeto esteja funcionando corretamente.

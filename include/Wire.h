@@ -20,7 +20,7 @@ public:
         sf::Vector2f b = toPin->shape.getPosition();
         float dist = std::abs((b.y - a.y) * p.x - (b.x - a.x) * p.y + b.x * a.y - b.y * a.x) / 
                      std::sqrt(std::pow(b.y - a.y, 2) + std::pow(b.x - a.x, 2));
-        
+
         // Check if Point is within the segment's bounding box
         if (p.x < std::min(a.x, b.x) - 5 || p.x > std::max(a.x, b.x) + 5 ||
             p.y < std::min(a.y, b.y) - 5 || p.y > std::max(a.y, b.y) + 5) return false;
@@ -30,6 +30,7 @@ public:
 
     Pin* fromPin;
     Pin* toPin;
+    bool isSelected = false;
 };
 
 #endif

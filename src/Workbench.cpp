@@ -66,9 +66,7 @@ void Workbench::undo() {
     current.gates = placedGates;
     current.wires = wires;
     redoStack.push_back(current);
-    if (redoStack.size() > MaxUndoSteps) {
-        redoStack.erase(redoStack.begin());
-    }
+    if (redoStack.size() > MaxUndoSteps) redoStack.erase(redoStack.begin());
 
     StateSnapshot prev = undoStack.back();
     placedGates = prev.gates;
@@ -83,9 +81,7 @@ void Workbench::redo() {
     current.gates = placedGates;
     current.wires = wires;
     undoStack.push_back(current);
-    if (undoStack.size() > MaxUndoSteps) {
-        undoStack.erase(undoStack.begin());
-    }
+    if (undoStack.size() > MaxUndoSteps) undoStack.erase(undoStack.begin());
 
     StateSnapshot next = redoStack.back();
     placedGates = next.gates;
@@ -183,7 +179,7 @@ void Workbench::setupTooltip() {
     progressBar.setOutlineColor(Theme::ProgressBorder);
 }
 
-// ---- Modal layout geometry (shared between draw and handleEvent) ----
+// Modal layout geometry (shared between draw and handleEvent)
 sf::FloatRect Workbench::chipRect(size_t i, float startY) {
     size_t col = i % 4;
     size_t row = i / 4;
@@ -222,7 +218,7 @@ sf::FloatRect Workbench::loadRowDeleteBtnRect(size_t i) const {
     return sf::FloatRect({ModalX + ModalW - 85, y + 7}, {65, 26});
 }
 
-// ---- Path / metadata helpers ----
+// Path / metadata helpers
 fs::path Workbench::projectDir(const std::string& category) const {
     fs::path base = "projetos";
     if (category.empty()) return base;

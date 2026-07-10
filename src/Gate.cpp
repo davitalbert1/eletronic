@@ -6,8 +6,7 @@
 static const std::array<std::string, 5> GateLabels = {"AND", "OR", "NOT", "CLOCK", "POWER"};
 
 // Pin implementation
-Pin::Pin(PinType t, sf::Vector2f o, Gate* p)
-    : type(t), offset(o), parent(p) {
+Pin::Pin(PinType t, sf::Vector2f o, Gate* p) : type(t), offset(o), parent(p) {
     shape.setRadius(Config::PinRadius);
     shape.setFillColor(Theme::SignalOff);
     shape.setOrigin(sf::Vector2f(Config::PinRadius, Config::PinRadius));
@@ -36,7 +35,9 @@ Gate::Gate(GateType t, sf::Vector2f pos, const sf::Font& font)
     updateLabelPos();
 }
 
-float Gate::getExtraData() const { return 0.f; }
+float Gate::getExtraData() const {
+    return 0.f;
+}
 void  Gate::setExtraData(float) {}
 
 void Gate::draw(sf::RenderWindow& window) {
@@ -51,8 +52,14 @@ void Gate::draw(sf::RenderWindow& window) {
     }
     window.draw(body);
     window.draw(label);
-    for (auto& pin : inputs)  { pin.update(position); window.draw(pin.shape); }
-    for (auto& pin : outputs) { pin.update(position); window.draw(pin.shape); }
+    for (auto& pin : inputs)  {
+        pin.update(position);
+        window.draw(pin.shape);
+    }
+    for (auto& pin : outputs) {
+        pin.update(position);
+        window.draw(pin.shape);
+    }
 }
 
 void Gate::setPosition(sf::Vector2f pos) {
@@ -73,5 +80,10 @@ bool Gate::contains(sf::Vector2f point) const {
     return body.getGlobalBounds().contains(point);
 }
 
-sf::Vector2f Gate::getPosition() const { return position; }
-GateType     Gate::getType()     const { return type; }
+sf::Vector2f Gate::getPosition() const {
+    return position;
+}
+
+GateType Gate::getType() const {
+    return type;
+}

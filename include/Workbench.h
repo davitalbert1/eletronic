@@ -22,6 +22,7 @@ public:
     void setupPalette();
     void setupModal();
     void draw(sf::RenderWindow& window);
+    void renderImGui();
     void updatePropagation();
     void refreshProjectList();
     void handleEvent(const sf::Event& event, const sf::RenderWindow& window);

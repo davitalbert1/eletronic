@@ -59,7 +59,9 @@ public:
         label.setFillColor(on ? Theme::SignalOn : Theme::Text);
         updateLabelPos();
     }
-    float getExtraData() const override { return outputs[0].state ? 1.0f : 0.0f; }
+    float getExtraData() const override {
+        return outputs[0].state ? 1.0f : 0.0f;
+    }
     void setExtraData(float data) override { setState(data > 0.5f); }
     void updateLogic() override {} // State is manual
 };
@@ -89,7 +91,9 @@ public:
         label.setString("CLOCK: " + std::to_string(interval).substr(0, 3) + "s");
         updateLabelPos();
     }
-    float getExtraData() const override { return interval; }
+    float getExtraData() const override {
+        return interval;
+    }
     void setExtraData(float data) override { 
         interval = data; 
         updateLabel();

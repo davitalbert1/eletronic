@@ -4,8 +4,30 @@
 #include "Wire.h"
 #include <SFML/Graphics.hpp>
 #include <algorithm>
+#include <imgui.h>
 
 namespace fs = std::filesystem;
+
+Workbench::Workbench(const sf::Font& font) 
+    : font(font)
+    , menuBar(sf::Vector2f(0, 0))
+    , menuButton(sf::Vector2f(0, 0))
+    , dropdown(sf::Vector2f(0, 0))
+    , overlay(sf::Vector2f(0, 0))
+    , modalRect(sf::Vector2f(0, 0))
+    , selectionRect(sf::Vector2f(0, 0))
+    , paletteRect(sf::Vector2f(0, 0))
+    , menuText(font, "", 16)
+    , saveText(font, "", 14)
+    , loadText(font, "", 14)
+    , newText(font, "", 14)
+    , modalTitle(font, "", 20)
+    , inputText(font, "", 18)
+    , listText(font, "", 16) {
+    setupMenu();
+    setupPalette();
+    setupModal();
+}
 
 void Workbench::newProject() {
     placedGates.clear();
@@ -107,7 +129,7 @@ void Workbench::draw(sf::RenderWindow& window) {
     if (isSaveModal || isLoadModal) {
         window.draw(overlay);
         window.draw(modalRect);
-        
+
         modalTitle.setPosition({420, 270});
         modalTitle.setString(isSaveModal ? "Salvar Projeto" : "Carregar Projeto");
         window.draw(modalTitle);
@@ -131,9 +153,9 @@ void Workbench::draw(sf::RenderWindow& window) {
             for (size_t i = 0; i < projectFiles.size(); ++i) {
                 float yPos = 310 + static_cast<float>(i) * 30;
                 sf::FloatRect rowBounds({415.f, yPos}, {370.f, 28.f});
-                
+
                 bool isHovered = rowBounds.contains(mousePosF);
-                
+
                 if (isHovered || i == selectedProjectIndex) {
                     sf::RectangleShape sel;
                     sel.setSize({370, 28});
@@ -398,12 +420,16 @@ void Workbench::handleEvent(const sf::Event& event, const sf::RenderWindow& wind
                 if ((*it)->isSelected) {
                     Gate* gatePtr = (*it).get();
                     for (auto wIt = wires.begin(); wIt != wires.end(); ) {
-                        if (wIt->fromPin->parent == gatePtr || wIt->toPin->parent == gatePtr)
+                        if (wIt->fromPin->parent == gatePtr || wIt->toPin->parent == gatePtr) {
                             wIt = wires.erase(wIt);
-                        else ++wIt;
+                        } else {
+                            ++wIt;
+                        }
                     }
                     it = placedGates.erase(it);
-                } else ++it;
+                } else {
+                    ++it;
+                }
             }
         }
         else if (keyPressed->code == sf::Keyboard::Key::N && keyPressed->control && !isSaveModal && !isLoadModal) {
@@ -433,12 +459,16 @@ void Workbench::save(const std::string& name) {
     }
 
     auto getGateIdx = [&](Gate* g) -> int {
-        for (size_t i = 0; i < placedGates.size(); ++i) if (placedGates[i].get() == g) return (int)i;
+        for (size_t i = 0; i < placedGates.size(); ++i) {
+            if (placedGates[i].get() == g) return (int)i;
+        }
         return -1;
     };
     auto getPinIdx = [&](Gate* g, Pin* p, bool input) -> int {
         const auto& pins = input ? g->inputs : g->outputs;
-        for (size_t i = 0; i < pins.size(); ++i) if (&pins[i] == p) return (int)i;
+        for (size_t i = 0; i < pins.size(); ++i) {
+            if (&pins[i] == p) return (int)i;
+        }
         return -1;
     };
 
@@ -454,6 +484,41 @@ void Workbench::save(const std::string& name) {
     currentProjectName = name;
 }
 
+void Workbench::renderImGui() {
+    // Create a simple ImGui window for demonstration
+    ImGui::Begin("Logic Gate Simulator");
+    
+    // Show gate count
+    ImGui::Text("Gates placed: %zu", placedGates.size());
+    ImGui::Text("Wires connected: %zu", wires.size());
+    
+    // Show current project
+    if (!currentProjectName.empty()) {
+        ImGui::Text("Project: %s", currentProjectName.c_str());
+    }
+    
+    ImGui::Separator();
+    
+    // Quick actions
+    if (ImGui::Button("New Project")) {
+        newProject();
+    }
+    if (ImGui::Button("Save Project")) {
+        if (!currentProjectName.empty()) {
+            save(currentProjectName);
+        } else {
+            isSaveModal = true;
+            inputBuffer = "";
+        }
+    }
+    if (ImGui::Button("Load Project")) {
+        isLoadModal = true;
+        refreshProjectList();
+    }
+    
+    ImGui::End();
+}
+
 void Workbench::load(const std::string& name) {
     std::ifstream f("projetos/" + name + ".gate");
     if (!f) return;
@@ -465,7 +530,7 @@ void Workbench::load(const std::string& name) {
         std::shared_ptr<Gate> newGate;
         switch ((GateType)t) {
             case GateType::AND: newGate = std::make_shared<ANDGate>(p, font); break;
-            case GateType::OR:  newGate = std::make_shared<ORGate>(p, font); break;
+            case GateType::OR: newGate = std::make_shared<ORGate>(p, font); break;
             case GateType::NOT: newGate = std::make_shared<NOTGate>(p, font); break;
             case GateType::CLOCK: newGate = std::make_shared<ClockGate>(p, font); break;
             case GateType::POWER: newGate = std::make_shared<PowerSource>(p, font); break;

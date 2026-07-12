@@ -156,8 +156,12 @@ public:
     std::shared_ptr<Gate> createGateFromType(GateType type, const sf::Vector2f& pos, const sf::Font& font) const;
 
     // State access
-    InputState& getState() { return state; }
-    const InputState& getState() const { return state; }
+    InputState& getState() {
+        return state;
+    }
+    const InputState& getState() const {
+        return state;
+    }
 
 private:
     InputState state;

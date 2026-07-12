@@ -36,13 +36,24 @@ namespace chip {
             return v;
         }
 
-        bool isNull() const { return type == Type::Null; }
-        bool isObject() const { return type == Type::Object; }
-        bool isArray() const { return type == Type::Array; }
+        bool isNull() const {
+            return type == Type::Null;
+        }
+        bool isObject() const {
+            return type == Type::Object;
+        }
+        bool isArray() const {
+            return type == Type::Array;
+        }
 
         // Object helpers
         void set(const std::string& key, JsonValue v) {
-            for (auto& kv : obj) { if (kv.first == key) { kv.second = std::move(v); return; } }
+            for (auto& kv : obj) {
+                if (kv.first == key) {
+                    kv.second = std::move(v);
+                    return;
+                }
+            }
             obj.emplace_back(key, std::move(v));
         }
         bool has(const std::string& key) const {
@@ -51,7 +62,9 @@ namespace chip {
         }
         const JsonValue& get(const std::string& key) const {
             static JsonValue nullVal;
-            for (auto& kv : obj) if (kv.first == key) return kv.second;
+            for (auto& kv : obj) {
+                if (kv.first == key) return kv.second;
+            }
             return nullVal;
         }
         void push(JsonValue v) {

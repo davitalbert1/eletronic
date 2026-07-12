@@ -15,16 +15,20 @@ public:
         return currentTheme_;
     }
     void setTheme(ThemeType theme) {
-        currentTheme_ = theme; applyTheme();
+        currentTheme_ = theme;
+        applyTheme();
     }
 
     // Font scale management
     void cycleFontScale();
     void applyFontScale();
     FontScale getCurrentFontScale() const {
-        return currentFontScale_; }
+        return currentFontScale_;
+    }
     void setFontScale(FontScale scale) {
-        currentFontScale_ = scale; applyFontScale(); }
+        currentFontScale_ = scale;
+        applyFontScale();
+    }
 
     // High contrast mode
     void toggleHighContrast();

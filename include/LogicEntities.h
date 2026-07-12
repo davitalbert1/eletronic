@@ -226,8 +226,12 @@ public:
         uint8_t data = contents[addr & 0xF];
         for (int i = 0; i < 4; ++i) outputs[i].state = (data >> i) & 1;
     }
-    float getExtraData() const override { return (float)presetIndex; }
-    void setExtraData(float data) override { loadPreset((int)data); }
+    float getExtraData() const override {
+        return (float)presetIndex;
+    }
+    void setExtraData(float data) override {
+        loadPreset((int)data);
+    }
     std::shared_ptr<Gate> clone(const sf::Font& font) const override {
         auto g = std::make_shared<ROM>(getPosition(), font);
         g->setExtraData((float)presetIndex);
@@ -372,7 +376,9 @@ public:
         updateLabelPos();
     }
     void updateLogic() override { outputs[0].state = on; }
-    float getExtraData() const override { return on ? 1.0f : 0.0f; }
+    float getExtraData() const override {
+        return on ? 1.0f : 0.0f;
+    }
     void setExtraData(float data) override {
         on = data > 0.5f;
         label.setString(on ? "SW: ON" : "SW: OFF");
@@ -496,7 +502,9 @@ public:
         // O sinal já foi escrito em outputs[0].state pelo CustomChip antes
         // da simulação interna; aqui apenas propagamos (sem alteração).
     }
-    std::string getPinName() const override { return pinName_; }
+    std::string getPinName() const override {
+        return pinName_;
+    }
     void setPinName(const std::string& n) override {
         pinName_ = n;
         label.setString(n);
@@ -521,7 +529,9 @@ public:
     void updateLogic() override {
         // O valor de entrada é lido pelo CustomChip após a simulação interna.
     }
-    std::string getPinName() const override { return pinName_; }
+    std::string getPinName() const override {
+        return pinName_;
+    }
     void setPinName(const std::string& n) override {
         pinName_ = n;
         label.setString(n);
@@ -554,6 +564,8 @@ public:
 
     // Recalcula entradas/saídas externas a partir da definição (usado após
     // atualizar o chip). Recria o circuito interno.
+    void rebuild(const sf::Font& font);
+
 private:
     std::shared_ptr<chip::ChipDefinition> definition_;
     std::shared_ptr<chip::Circuit> internal_; // cópia independente do circuito

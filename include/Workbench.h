@@ -17,6 +17,7 @@
 #include "chip/ChipLibrary.h"
 #include "chip/ChipFactory.h"
 #include "chip/ChipDefinition.h"
+#include "DigitalLogicSimImporter.h"
 
 class Workbench {
 public:
@@ -53,6 +54,13 @@ public:
     // Project management
     void refreshProjectList();
     void refreshCategories();
+
+    // Digital Logic Sim import
+    void importDigitalLogicSimProject(const std::string& filePath);
+    ImportResult getLastImportResult() const {
+        return lastImportResult_;
+    }
+    void applyImportResult(const ImportResult& importResult);
 
     // Modal layout geometry
     static constexpr float ModalX = 340.f, ModalY = 140.f, ModalW = 520.f, ModalH = 560.f;
@@ -111,6 +119,11 @@ private:
     // Help system
     bool showHelp_ = false;
 
+    // Digital Logic Sim import
+    ImportResult lastImportResult_;
+    bool showImportResultDialog_ = false;
+    DigitalLogicSimImporter dlsImporter_;
+
     // Component grouping (using WorkbenchInput::ComponentGroup)
     using ComponentGroup = WorkbenchInput::ComponentGroup;
     std::vector<ComponentGroup> groups_;
@@ -156,6 +169,7 @@ private:
     void handleConfirmDialog();
     void toggleHelp();
     void drawHelpOverlay(sf::RenderWindow& window);
+    void drawImportResultDialog(sf::RenderWindow& window);
     void setupPalette();
     void applySort();
     void applySearch();

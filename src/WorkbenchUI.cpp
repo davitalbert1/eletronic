@@ -12,6 +12,7 @@ WorkbenchUI::WorkbenchUI(const sf::Font& font)
     , inputText_(font_)
     , listText_(font_)
     , tooltipText_(font_)
+    , importDlsText_(font_)
     , progressText_(font_) {
     setupMenu();
     setupPalette();
@@ -52,6 +53,10 @@ void WorkbenchUI::setupMenu() {
     saveAsText_.setFont(font_);
     saveAsText_.setString("Save As...");
     saveAsText_.setCharacterSize(14);
+
+    importDlsText_.setFont(font_);
+    importDlsText_.setString("Importar DLS");
+    importDlsText_.setCharacterSize(14);
 }
 
 void WorkbenchUI::setupPalette() {
@@ -121,16 +126,19 @@ void WorkbenchUI::drawMenu(sf::RenderWindow& window) {
         saveText_.setPosition({20, Config::TopMenuHeight + 45});
         loadText_.setPosition({20, Config::TopMenuHeight + 80});
         saveAsText_.setPosition({20, Config::TopMenuHeight + 115});
+        importDlsText_.setPosition({20, Config::TopMenuHeight + 150});
 
         newText_.setFillColor(isNewHovered_ ? Theme::Highlight : Theme::Text);
         saveText_.setFillColor(isSaveHovered_ ? Theme::Highlight : Theme::Text);
         loadText_.setFillColor(isLoadHovered_ ? Theme::Highlight : Theme::Text);
         saveAsText_.setFillColor(isSaveAsHovered_ ? Theme::Highlight : Theme::Text);
+        importDlsText_.setFillColor(isImportDlsHovered_ ? Theme::Highlight : Theme::Text);
 
         window.draw(newText_);
         window.draw(saveText_);
         window.draw(loadText_);
         window.draw(saveAsText_);
+        window.draw(importDlsText_);
     }
 }
 
@@ -492,4 +500,12 @@ sf::FloatRect WorkbenchUI::loadDetailPanelRect() const {
 
 sf::FloatRect WorkbenchUI::loadSaveMetaBtnRect() const {
     return sf::FloatRect({ModalX + ModalW - 140, ModalY + ModalH - 35}, {120, 26});
+}
+
+sf::FloatRect WorkbenchUI::importResultRect() {
+    return sf::FloatRect({ImportResultX, ImportResultY}, {ImportResultW, ImportResultH});
+}
+
+sf::FloatRect WorkbenchUI::importResultCloseBtn() {
+    return sf::FloatRect({ImportResultX + ImportResultW - 120, ImportResultY + ImportResultH - 45}, {100, 30});
 }

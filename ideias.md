@@ -1,24 +1,42 @@
-crie forma de importar projetos criados pelo "digital logic sim", convertendo estes itens em padrão deste projeto.
-
 crie forma de usuário transformar uma lógica em texto, com esse texto conseguindo descrever exatamente o que está acontecendo (como uma pseudolinguagem de código)
 faça também que seja possível importar essa linguagem para o ambiente, garantindo que seja possível remontar exatamente o que existira antes.
 crie também uma pequena documentação explicando os itens desta documentação.
 essa linguagem deve comportar estruturas complexas e compeltas reais.
 
-itens para adicionar: memória ROM, display
-
 ao iniciar app, deve abrir página perguntando sobre qual projeto que quer abrir, antes de abrir algum projeto. garanta que o salvamento e o carregamento do projeto esteja funcionando corretamente.
 
-erros ao iniciar o app ao clicar 2 vezes no exe diretamente:
+Quero corrigir o processo de distribuição do aplicativo para que o executável seja **completamente autossuficiente**, sem exigir que o usuário instale bibliotecas, runtimes ou dependências manualmente.
 
-simulator.exe - Erro do sistema
-A execução de código não pode continuar porque libsfml-system-3.dll não foi encontrado. Reinstalando o programa para corrigir o problema.
-simulator.exe - Erro do sistema
-A execução de código não pode continuar porque libsfml-graphics-3.dll não foi encontrado. Reinstalando o programa para corrigir o problema.
-simulator.exe - Erro do sistema
-A execução de código não pode continuar porque libgcc_s_seh-1.dll não foi encontrado. Reinstalando o programa para corrigir o problema.
+Problema atual:
 
-o app deve ser autossuficiente, tendo internamente tudo o que precisa.
+Ao executar o `simulator.exe` diretamente, o Windows exibe erros como:
+
+* `libsfml-system-3.dll não foi encontrado`
+* `libsfml-graphics-3.dll não foi encontrado`
+* `libgcc_s_seh-1.dll não foi encontrado`
+
+Isso indica que o executável depende de DLLs externas que não estão sendo distribuídas corretamente.
+
+Objetivo:
+
+O usuário deve conseguir baixar a pasta (ou o instalador), dar dois cliques em `simulator.exe` e o programa iniciar normalmente, sem qualquer instalação adicional.
+
+Requisitos:
+
+* Identificar todas as dependências necessárias em tempo de execução.
+* Garantir que todas as DLLs obrigatórias sejam incluídas automaticamente no processo de build ou empacotamento.
+* Sempre que possível, utilizar **linkagem estática** para reduzir dependências externas.
+* Quando a linkagem estática não for viável, copiar automaticamente todas as DLLs necessárias para a mesma pasta do executável durante o processo de compilação.
+* Configurar o sistema de build para que a pasta de distribuição seja totalmente funcional.
+* Eliminar a necessidade de instalar SFML, MinGW, GCC Runtime, Visual C++ Redistributable ou qualquer outra dependência para executar o programa.
+* Garantir que o aplicativo funcione em uma instalação limpa do Windows, onde nenhuma biblioteca de desenvolvimento esteja instalada.
+* Revisar a configuração do CMake (ou do sistema de build utilizado) para produzir uma distribuição completa.
+* Criar um processo de empacotamento automatizado para que futuras compilações já gerem uma versão pronta para distribuição.
+* Verificar se existem outras dependências indiretas que também precisam ser incluídas.
+* Explicar quais alterações foram realizadas e por que elas resolvem o problema.
+
+Implemente essa correção seguindo as boas práticas de distribuição de aplicações desktop para Windows, tornando o executável completamente portátil e pronto para uso em qualquer computador compatível.
+
 
 Quero implementar um sistema de **Entradas e Saídas Unificadas (Barramentos)** no simulador.
 

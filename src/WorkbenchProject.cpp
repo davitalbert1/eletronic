@@ -48,7 +48,8 @@ void WorkbenchProject::writeProject(const fs::path& p,
 
     f << placedGates.size() << "\n";
     for (auto& g : placedGates) {
-        f << (int)g->getType() << " " << g->getPosition().x << " " << g->getPosition().y << " " << g->getExtraData() << "\n";
+        f << (int)g->getType() << " " << g->getPosition().x << " " << g->getPosition().y << " " 
+          << g->getExtraData() << " " << g->getRotation() << "\n";
     }
 
     auto getGateIdx = [&](Gate* g) -> int {
@@ -104,10 +105,20 @@ bool WorkbenchProject::loadProject(const fs::path& p,
     if (!(f >> gateCount)) return false;
     if (gateCount > 10000) return false;
 
+    // Consumir o newline após o gateCount
+    f.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
     while (gateCount--) {
+        std::string line;
+        std::getline(f, line);
+        if (line.empty()) { ++gateCount; continue; } // skip blank lines
+
+        std::istringstream iss(line);
         int t;
-        float x, y, extra;
-        if (!(f >> t >> x >> y >> extra)) return false;
+        float x, y, extra, rotation = 0.0f;
+        if (!(iss >> t >> x >> y >> extra)) return false;
+        // Tenta ler rotação (formato antigo não tem rotation)
+        iss >> rotation; // se falhar, rotation fica 0.0f (default)
 
         if (t < 0 || t > 16) continue;
 
@@ -168,6 +179,7 @@ bool WorkbenchProject::loadProject(const fs::path& p,
             }
         if (newGate) {
             newGate->setExtraData(extra);
+            if (rotation != 0.0f) newGate->setRotation(rotation);
             placedGates.push_back(newGate);
         }
     }

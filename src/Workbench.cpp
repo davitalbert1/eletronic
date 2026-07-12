@@ -8,6 +8,7 @@
 #include <ctime>
 #include <chrono>
 #include <sstream>
+#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -316,6 +317,8 @@ void Workbench::draw(sf::RenderWindow& window) {
 
     if (showHelp_) drawHelpOverlay(window);
 
+    if (showImportResultDialog_) drawImportResultDialog(window);
+
     performance_.drawFPS(window, true, performance_.isPerformanceMode(), font_);
 }
 
@@ -536,6 +539,25 @@ void Workbench::handleEvent(const sf::Event& event, const sf::RenderWindow& wind
         return;
     }
 
+    // Import result dialog handling
+    if (showImportResultDialog_) {
+        if (const auto* mousePressed = event.getIf<sf::Event::MouseButtonPressed>()) {
+            if (mousePressed->button == sf::Mouse::Button::Left) {
+                if (ui_.importResultCloseBtn().contains(mousePosF)) {
+                    showImportResultDialog_ = false;
+                    statusMessage_ = "Importacao concluida: " + 
+                        std::to_string(lastImportResult_.convertedComponents) + 
+                        " componentes convertidos, " +
+                        std::to_string(lastImportResult_.convertedConnections) + 
+                        " conexoes.";
+                    statusMessageTimer_ = 5.0f;
+                    return;
+                }
+            }
+        }
+        return;
+    }
+
     // Palette scrolling with mouse wheel
     if (const auto* mouseWheel = event.getIf<sf::Event::MouseWheelScrolled>()) {
         if (mouseWheel->wheel == sf::Mouse::Wheel::Vertical &&
@@ -551,6 +573,8 @@ void Workbench::handleEvent(const sf::Event& event, const sf::RenderWindow& wind
     ui_.setSaveHovered(ui_.getSaveText().getGlobalBounds().contains(mousePosF));
     ui_.setLoadHovered(ui_.getLoadText().getGlobalBounds().contains(mousePosF));
     ui_.setSaveAsHovered(ui_.getSaveAsText().getGlobalBounds().contains(mousePosF));
+    ui_.setImportDlsHovered(ui_.showDropdown() && 
+        ui_.getImportDlsText().getGlobalBounds().contains(mousePosF));
 
     if (ui_.isMenuButtonHovered() && !ui_.showDropdown()) {
         ui_.setCurrentTooltip("Open main menu");
@@ -562,6 +586,8 @@ void Workbench::handleEvent(const sf::Event& event, const sf::RenderWindow& wind
         ui_.setCurrentTooltip("Load an existing project (Ctrl+L)");
     } else if (ui_.isSaveAsHovered()) {
         ui_.setCurrentTooltip("Save current project under a new name");
+    } else if (ui_.isImportDlsHovered()) {
+        ui_.setCurrentTooltip("Importar projeto do Digital Logic Sim");
     } else {
         ui_.clearTooltip();
     }
@@ -612,6 +638,23 @@ void Workbench::handleEvent(const sf::Event& event, const sf::RenderWindow& wind
                     refreshCategories();
                     refreshProjectList();
                     ui_.setShowDropdown(false);
+                    return;
+                }
+                if (ui_.getImportDlsText().getGlobalBounds().contains(mousePosF)) {
+                    ui_.setShowDropdown(false);
+                    // Open file dialog using Windows API
+                    OPENFILENAMEA ofn = {0};
+                    char szFile[260] = {0};
+                    ofn.lStructSize = sizeof(ofn);
+                    ofn.hwndOwner = nullptr;
+                    ofn.lpstrFile = szFile;
+                    ofn.nMaxFile = sizeof(szFile);
+                    ofn.lpstrFilter = "JSON Files\0*.json\0All Files\0*.*\0";
+                    ofn.nFilterIndex = 1;
+                    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+                    if (GetOpenFileNameA(&ofn)) {
+                        importDigitalLogicSimProject(szFile);
+                    }
                     return;
                 }
             }
@@ -986,4 +1029,138 @@ bool Workbench::attemptRecovery() {
 
 void Workbench::saveEmergencyBackup() {
     performance_.saveEmergencyBackup(currentProjectName_, placedGates_, wires_);
+}
+
+// ---------------------------------------------------------------------------
+// Digital Logic Sim Import
+// ---------------------------------------------------------------------------
+
+void Workbench::importDigitalLogicSimProject(const std::string& filePath) {
+    // Realiza a importação
+    lastImportResult_ = dlsImporter_.importFromFile(filePath, font_);
+
+    if (!lastImportResult_.success) {
+        statusMessage_ = "Falha na importacao: " + lastImportResult_.errorMessage;
+        statusMessageTimer_ = 8.0f;
+        return;
+    }
+
+    // Aplica o resultado da importação ao projeto atual
+    applyImportResult(lastImportResult_);
+
+    // Mostra o diálogo de resultado
+    showImportResultDialog_ = true;
+}
+
+void Workbench::applyImportResult(const ImportResult& importResult) {
+    if (!importResult.success) return;
+
+    // Substitui o projeto atual pelo importado
+    newProject();
+    placedGates_ = importResult.gates;
+    wires_ = importResult.wires;
+    currentProjectName_ = importResult.projectName;
+    currentCategory_ = "importados";
+    currentDescription_ = "Importado de " + DigitalLogicSimImporter::formatName();
+
+    // Salva automaticamente na categoria de importados
+    fs::path dir = projectManager_.projectDir(currentCategory_);
+    fs::create_directories(dir);
+    fs::path p = dir / (currentProjectName_ + ".gate");
+    projectManager_.writeProject(p, placedGates_, wires_, currentProjectName_, currentCategory_,
+                                currentDescription_, currentTags_);
+
+    statusMessage_ = "Projeto importado com sucesso: " + currentProjectName_;
+    statusMessageTimer_ = 5.0f;
+}
+
+void Workbench::drawImportResultDialog(sf::RenderWindow& window) {
+    if (!showImportResultDialog_) return;
+
+    // Overlay
+    sf::RectangleShape overlay(sf::Vector2f(1200, 800));
+    overlay.setFillColor(sf::Color(0, 0, 0, 200));
+    window.draw(overlay);
+
+    // Dialog panel
+    sf::RectangleShape panel(sf::Vector2f(WorkbenchUI::ImportResultW, WorkbenchUI::ImportResultH));
+    panel.setPosition({WorkbenchUI::ImportResultX, WorkbenchUI::ImportResultY});
+    panel.setFillColor(Theme::ModalBg);
+    panel.setOutlineThickness(3);
+    panel.setOutlineColor(Theme::Highlight);
+    window.draw(panel);
+
+    // Title
+    sf::Text title(font_);
+    title.setString("Resultado da Importacao - Digital Logic Sim");
+    title.setCharacterSize(20);
+    title.setFillColor(Theme::Highlight);
+    title.setPosition({WorkbenchUI::ImportResultX + 20, WorkbenchUI::ImportResultY + 15});
+    window.draw(title);
+
+    // Project info
+    sf::Text info(font_);
+    std::string infoStr = "Projeto: " + lastImportResult_.projectName + "\n\n";
+    infoStr += "Componentes: " + std::to_string(lastImportResult_.totalComponents) + " total, ";
+    infoStr += std::to_string(lastImportResult_.convertedComponents) + " convertidos\n";
+    infoStr += "Conexoes: " + std::to_string(lastImportResult_.totalConnections) + " total, ";
+    infoStr += std::to_string(lastImportResult_.convertedConnections) + " convertidas\n";
+    info.setString(infoStr);
+    info.setCharacterSize(16);
+    info.setFillColor(Theme::Text);
+    info.setPosition({WorkbenchUI::ImportResultX + 20, WorkbenchUI::ImportResultY + 60});
+    window.draw(info);
+
+    // Unsupported components list
+    if (!lastImportResult_.unsupportedComponents.empty()) {
+        sf::Text unsupportedTitle(font_);
+        unsupportedTitle.setString("Componentes nao convertidos:");
+        unsupportedTitle.setCharacterSize(16);
+        unsupportedTitle.setFillColor(sf::Color(255, 200, 0)); // Yellow warning
+        unsupportedTitle.setPosition({WorkbenchUI::ImportResultX + 20, WorkbenchUI::ImportResultY + 180});
+        window.draw(unsupportedTitle);
+
+        std::string unsupportedStr;
+        for (size_t i = 0; i < lastImportResult_.unsupportedComponents.size() && i < 15; ++i) {
+            unsupportedStr += "  - " + lastImportResult_.unsupportedComponents[i] + "\n";
+        }
+        if (lastImportResult_.unsupportedComponents.size() > 15) {
+            unsupportedStr += "  ... e mais " + 
+                std::to_string(lastImportResult_.unsupportedComponents.size() - 15) + " componentes\n";
+        }
+
+        sf::Text unsupportedList(font_);
+        unsupportedList.setString(unsupportedStr);
+        unsupportedList.setCharacterSize(14);
+        unsupportedList.setFillColor(sf::Color(255, 180, 100));
+        unsupportedList.setPosition({WorkbenchUI::ImportResultX + 30, WorkbenchUI::ImportResultY + 210});
+        window.draw(unsupportedList);
+    }
+
+    // Success/Error message
+    sf::Text status(font_);
+    if (lastImportResult_.success) {
+        status.setString("Importacao concluida com sucesso!");
+        status.setFillColor(Theme::SignalOn);
+    } else {
+        status.setString("Erro: " + lastImportResult_.errorMessage);
+        status.setFillColor(sf::Color(255, 100, 100));
+    }
+    status.setCharacterSize(18);
+    status.setPosition({WorkbenchUI::ImportResultX + 20, WorkbenchUI::ImportResultY + WorkbenchUI::ImportResultH - 80});
+    window.draw(status);
+
+    // Close button
+    sf::FloatRect closeBtn = WorkbenchUI::importResultCloseBtn();
+    sf::RectangleShape closeBtnShape(closeBtn.size);
+    closeBtnShape.setPosition(closeBtn.position);
+    closeBtnShape.setFillColor(Theme::ButtonActive);
+    window.draw(closeBtnShape);
+
+    sf::Text closeText(font_);
+    closeText.setString("Fechar");
+    closeText.setCharacterSize(16);
+    closeText.setFillColor(sf::Color::White);
+    closeText.setPosition({closeBtn.position.x + 20, closeBtn.position.y + 5});
+    window.draw(closeText);
 }

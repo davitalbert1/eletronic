@@ -5,17 +5,12 @@ void Wire::draw(sf::RenderWindow& window) {
     sf::Vector2f start = fromPin->shape.getPosition();
     sf::Vector2f end = toPin->shape.getPosition();
 
-    // Determine wire color based on state - solid color, lighter when powered
     sf::Color wireColor = fromPin->state ? Theme::WireOn : Theme::WireOff;
 
-    // Use selected color if wire is selected
-    if (isSelected) {
-        wireColor = Theme::WireSelected;
-    }
+    if (isSelected) wireColor = Theme::WireSelected;
 
-    // Thicker wire when selected
     float thickness = isSelected ? Config::WireThicknessSelected : Config::WireThickness;
-    
+
     sf::Vector2f direction = end - start;
     float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
 
@@ -35,7 +30,7 @@ void Wire::draw(sf::RenderWindow& window) {
         for (int i = 0; i < lineCount; ++i) {
             float t = (float)i / (lineCount - 1) - 0.5f; // -0.5 to 0.5
             float offset = t * thickness;
-            
+
             sf::Vertex line[] = {
                 {start + perpendicular * offset, wireColor},
                 {end + perpendicular * offset, wireColor}

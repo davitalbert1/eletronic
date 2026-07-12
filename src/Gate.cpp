@@ -84,7 +84,7 @@ void Gate::draw(sf::RenderWindow& window) {
         glowOutline.setOutlineThickness(Config::SelectionGlowThickness);
         glowOutline.setOutlineColor(Config::SelectionGlow);
         window.draw(glowOutline);
-        
+
         // Main selection outline
         sf::RectangleShape selectionOutline;
         selectionOutline.setSize(body.getSize() + sf::Vector2f(8, 8));
@@ -93,7 +93,7 @@ void Gate::draw(sf::RenderWindow& window) {
         selectionOutline.setOutlineThickness(4);
         selectionOutline.setOutlineColor(Theme::Highlight);
         window.draw(selectionOutline);
-        
+
         // Corner accents for better visibility
         float cornerSize = 8.0f;
         sf::RectangleShape corners[4];
@@ -109,7 +109,7 @@ void Gate::draw(sf::RenderWindow& window) {
         // Bottom-right
         corners[3].setSize({cornerSize, 3});
         corners[3].setPosition(body.getPosition() + sf::Vector2f(body.getSize().x - cornerSize + 2, body.getSize().y - 1));
-        
+
         for (int i = 0; i < 4; ++i) {
             corners[i].setFillColor(Theme::Highlight);
             window.draw(corners[i]);

@@ -96,7 +96,7 @@ public:
     float getExtraData() const override {
         return interval;
     }
-    void setExtraData(float data) override { 
+    void setExtraData(float data) override {
         interval = data;
         updateLabel();
     }

@@ -48,7 +48,7 @@ int main() {
         static sf::Clock clock;
         float deltaTime = clock.restart().asSeconds();
         workbench.update(deltaTime);
-        
+
         // Logic propagation loop
         workbench.updatePropagation();
         workbench.renderImGui();

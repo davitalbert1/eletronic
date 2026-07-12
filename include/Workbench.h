@@ -108,6 +108,13 @@ private:
     bool enableSnapToGrid_ = true;
     sf::Vector2f snapToGrid(sf::Vector2f pos);
 
+    // Palette scrolling
+    float paletteScroll_ = 0.0f;
+    static constexpr float PaletteItemStep = 90.0f;
+    static constexpr float PaletteTop = Config::TopMenuHeight + 20.0f;
+    static constexpr float PaletteViewBottom = 800.0f;
+    void updatePalettePositions();
+
     // Undo/Redo
     std::unique_ptr<UndoRedoManager> undoRedoManager_;
 

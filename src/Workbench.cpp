@@ -51,11 +51,39 @@ sf::Vector2f Workbench::snapToGrid(sf::Vector2f pos) {
 }
 
 void Workbench::setupPalette() {
-    paletteItems_.push_back(std::make_shared<ANDGate>(sf::Vector2f(25, Config::TopMenuHeight + 20), font_));
-    paletteItems_.push_back(std::make_shared<ORGate>(sf::Vector2f(25, Config::TopMenuHeight + 110), font_));
-    paletteItems_.push_back(std::make_shared<NOTGate>(sf::Vector2f(25, Config::TopMenuHeight + 200), font_));
-    paletteItems_.push_back(std::make_shared<ClockGate>(sf::Vector2f(25, Config::TopMenuHeight + 290), font_));
-    paletteItems_.push_back(std::make_shared<PowerSource>(sf::Vector2f(25, Config::TopMenuHeight + 380), font_));
+    const float x = 25.0f;
+    size_t i = 0;
+    auto add = [&](std::shared_ptr<Gate> g) {
+        paletteItems_.push_back(g);
+        (void)i;
+    };
+    add(std::make_shared<ANDGate>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<ORGate>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<NOTGate>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<XORGate>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<NANDGate>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<NORGate>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<XNORGate>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<ClockGate>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<PowerSource>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Switch>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Button>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<LED>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<ROM>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Seg7Display>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<LCDDisplay>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Counter>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Register>(sf::Vector2f(0, 0), font_));
+    updatePalettePositions();
+}
+
+void Workbench::updatePalettePositions() {
+    const float x = 25.0f;
+    float maxScroll = std::max(0.0f, PaletteTop + PaletteItemStep * (float)paletteItems_.size() - PaletteViewBottom);
+    paletteScroll_ = std::clamp(paletteScroll_, 0.0f, maxScroll);
+    for (size_t i = 0; i < paletteItems_.size(); ++i) {
+        paletteItems_[i]->setPosition({x, PaletteTop + PaletteItemStep * (float)i - paletteScroll_});
+    }
 }
 
 void Workbench::draw(sf::RenderWindow& window) {
@@ -65,8 +93,12 @@ void Workbench::draw(sf::RenderWindow& window) {
     // Draw palette background
     ui_.drawPalette(window);
 
-    // Draw palette items
+    // Clip palette items to the palette area
+    sf::View paletteView(sf::FloatRect({0, Config::TopMenuHeight},
+                                       {Config::PaletteWidth, PaletteViewBottom - Config::TopMenuHeight}));
+    window.setView(paletteView);
     for (auto& item : paletteItems_) item->draw(window);
+    window.setView(window.getDefaultView());
 
     // Draw wires
     for (auto& wire : wires_) wire.draw(window);
@@ -366,6 +398,15 @@ void Workbench::handleEvent(const sf::Event& event, const sf::RenderWindow& wind
         return;
     }
 
+    // Palette scrolling with mouse wheel
+    if (const auto* mouseWheel = event.getIf<sf::Event::MouseWheelScrolled>()) {
+        if (mouseWheel->wheel == sf::Mouse::Wheel::Vertical &&
+            mousePosF.x < Config::PaletteWidth && mousePosF.y > Config::TopMenuHeight) {
+            paletteScroll_ -= mouseWheel->delta * 30.0f;
+            updatePalettePositions();
+        }
+    }
+
     // Regular event handling
     ui_.setMenuButtonHovered(ui_.getMenuButton().getGlobalBounds().contains(mousePosF));
     ui_.setNewHovered(ui_.getNewText().getGlobalBounds().contains(mousePosF));
@@ -451,11 +492,47 @@ void Workbench::handleEvent(const sf::Event& event, const sf::RenderWindow& wind
                         case GateType::NOT:
                             newGate = std::make_shared<NOTGate>(mousePosF, font_);
                             break;
+                        case GateType::XOR:
+                            newGate = std::make_shared<XORGate>(mousePosF, font_);
+                            break;
+                        case GateType::NAND:
+                            newGate = std::make_shared<NANDGate>(mousePosF, font_);
+                            break;
+                        case GateType::NOR:
+                            newGate = std::make_shared<NORGate>(mousePosF, font_);
+                            break;
+                        case GateType::XNOR:
+                            newGate = std::make_shared<XNORGate>(mousePosF, font_);
+                            break;
                         case GateType::CLOCK:
                             newGate = std::make_shared<ClockGate>(mousePosF, font_);
                             break;
                         case GateType::POWER:
                             newGate = std::make_shared<PowerSource>(mousePosF, font_);
+                            break;
+                        case GateType::SWITCH:
+                            newGate = std::make_shared<Switch>(mousePosF, font_);
+                            break;
+                        case GateType::BUTTON:
+                            newGate = std::make_shared<Button>(mousePosF, font_);
+                            break;
+                        case GateType::LED:
+                            newGate = std::make_shared<LED>(mousePosF, font_);
+                            break;
+                        case GateType::ROM:
+                            newGate = std::make_shared<ROM>(mousePosF, font_);
+                            break;
+                        case GateType::SEG7:
+                            newGate = std::make_shared<Seg7Display>(mousePosF, font_);
+                            break;
+                        case GateType::LCD:
+                            newGate = std::make_shared<LCDDisplay>(mousePosF, font_);
+                            break;
+                        case GateType::COUNTER:
+                            newGate = std::make_shared<Counter>(mousePosF, font_);
+                            break;
+                        case GateType::REGISTER:
+                            newGate = std::make_shared<Register>(mousePosF, font_);
                             break;
                     }
                     if (newGate) {
@@ -650,9 +727,7 @@ void Workbench::renderImGui() {
 
     ImGui::Separator();
     ImGui::Text("Auto-backup: %s", autoBackupEnabled_ ? "ON (5 min)" : "OFF");
-    if (ImGui::Button("Create Backup Now")) {
-        projectManager_.createBackup(currentProjectName_, placedGates_, wires_);
-    }
+    if (ImGui::Button("Create Backup Now")) projectManager_.createBackup(currentProjectName_, placedGates_, wires_);
 
     ImGui::End();
 }

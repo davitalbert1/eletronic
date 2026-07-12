@@ -127,11 +127,47 @@ void WorkbenchInput::handleMousePress(const sf::Event::MouseButtonPressed& event
                     case GateType::NOT:
                         newGate = std::make_shared<NOTGate>(mousePos, font);
                         break;
+                    case GateType::XOR:
+                        newGate = std::make_shared<XORGate>(mousePos, font);
+                        break;
+                    case GateType::NAND:
+                        newGate = std::make_shared<NANDGate>(mousePos, font);
+                        break;
+                    case GateType::NOR:
+                        newGate = std::make_shared<NORGate>(mousePos, font);
+                        break;
+                    case GateType::XNOR:
+                        newGate = std::make_shared<XNORGate>(mousePos, font);
+                        break;
                     case GateType::CLOCK:
                         newGate = std::make_shared<ClockGate>(mousePos, font);
                         break;
                     case GateType::POWER:
                         newGate = std::make_shared<PowerSource>(mousePos, font);
+                        break;
+                    case GateType::SWITCH:
+                        newGate = std::make_shared<Switch>(mousePos, font);
+                        break;
+                    case GateType::BUTTON:
+                        newGate = std::make_shared<Button>(mousePos, font);
+                        break;
+                    case GateType::LED:
+                        newGate = std::make_shared<LED>(mousePos, font);
+                        break;
+                    case GateType::ROM:
+                        newGate = std::make_shared<ROM>(mousePos, font);
+                        break;
+                    case GateType::SEG7:
+                        newGate = std::make_shared<Seg7Display>(mousePos, font);
+                        break;
+                    case GateType::LCD:
+                        newGate = std::make_shared<LCDDisplay>(mousePos, font);
+                        break;
+                    case GateType::COUNTER:
+                        newGate = std::make_shared<Counter>(mousePos, font);
+                        break;
+                    case GateType::REGISTER:
+                        newGate = std::make_shared<Register>(mousePos, font);
                         break;
                 }
                 if (newGate) {
@@ -177,8 +213,7 @@ void WorkbenchInput::handleMousePress(const sf::Event::MouseButtonPressed& event
         for (auto it = placedGates.rbegin(); it != placedGates.rend(); ++it) {
             if ((*it)->contains(mousePos)) {
                 clickedGate = true;
-                if ((*it)->getType() == GateType::POWER) dynamic_cast<PowerSource*>((*it).get())->toggle();
-                if ((*it)->getType() == GateType::CLOCK) dynamic_cast<ClockGate*>((*it).get())->toggleInterval();
+                (*it)->interact();
 
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift) ||
                     sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RShift)) {
@@ -314,11 +349,47 @@ void WorkbenchInput::handleKeyPress(const sf::Event::KeyPressed& event,
                     case GateType::NOT:
                         newGate = std::make_shared<NOTGate>(gate->getPosition() + sf::Vector2f(20, 20), font);
                         break;
+                    case GateType::XOR:
+                        newGate = std::make_shared<XORGate>(gate->getPosition() + sf::Vector2f(20, 20), font);
+                        break;
+                    case GateType::NAND:
+                        newGate = std::make_shared<NANDGate>(gate->getPosition() + sf::Vector2f(20, 20), font);
+                        break;
+                    case GateType::NOR:
+                        newGate = std::make_shared<NORGate>(gate->getPosition() + sf::Vector2f(20, 20), font);
+                        break;
+                    case GateType::XNOR:
+                        newGate = std::make_shared<XNORGate>(gate->getPosition() + sf::Vector2f(20, 20), font);
+                        break;
                     case GateType::CLOCK:
                         newGate = std::make_shared<ClockGate>(gate->getPosition() + sf::Vector2f(20, 20), font);
                         break;
                     case GateType::POWER:
                         newGate = std::make_shared<PowerSource>(gate->getPosition() + sf::Vector2f(20, 20), font);
+                        break;
+                    case GateType::SWITCH:
+                        newGate = std::make_shared<Switch>(gate->getPosition() + sf::Vector2f(20, 20), font);
+                        break;
+                    case GateType::BUTTON:
+                        newGate = std::make_shared<Button>(gate->getPosition() + sf::Vector2f(20, 20), font);
+                        break;
+                    case GateType::LED:
+                        newGate = std::make_shared<LED>(gate->getPosition() + sf::Vector2f(20, 20), font);
+                        break;
+                    case GateType::ROM:
+                        newGate = std::make_shared<ROM>(gate->getPosition() + sf::Vector2f(20, 20), font);
+                        break;
+                    case GateType::SEG7:
+                        newGate = std::make_shared<Seg7Display>(gate->getPosition() + sf::Vector2f(20, 20), font);
+                        break;
+                    case GateType::LCD:
+                        newGate = std::make_shared<LCDDisplay>(gate->getPosition() + sf::Vector2f(20, 20), font);
+                        break;
+                    case GateType::COUNTER:
+                        newGate = std::make_shared<Counter>(gate->getPosition() + sf::Vector2f(20, 20), font);
+                        break;
+                    case GateType::REGISTER:
+                        newGate = std::make_shared<Register>(gate->getPosition() + sf::Vector2f(20, 20), font);
                         break;
                 }
                 if (newGate) {
@@ -501,8 +572,20 @@ std::shared_ptr<Gate> WorkbenchInput::createGateFromType(GateType type, const sf
         case GateType::AND: return std::make_shared<ANDGate>(pos, font);
         case GateType::OR: return std::make_shared<ORGate>(pos, font);
         case GateType::NOT: return std::make_shared<NOTGate>(pos, font);
+        case GateType::XOR: return std::make_shared<XORGate>(pos, font);
+        case GateType::NAND: return std::make_shared<NANDGate>(pos, font);
+        case GateType::NOR: return std::make_shared<NORGate>(pos, font);
+        case GateType::XNOR: return std::make_shared<XNORGate>(pos, font);
         case GateType::CLOCK: return std::make_shared<ClockGate>(pos, font);
         case GateType::POWER: return std::make_shared<PowerSource>(pos, font);
+        case GateType::SWITCH: return std::make_shared<Switch>(pos, font);
+        case GateType::BUTTON: return std::make_shared<Button>(pos, font);
+        case GateType::LED: return std::make_shared<LED>(pos, font);
+        case GateType::ROM: return std::make_shared<ROM>(pos, font);
+        case GateType::SEG7: return std::make_shared<Seg7Display>(pos, font);
+        case GateType::LCD: return std::make_shared<LCDDisplay>(pos, font);
+        case GateType::COUNTER: return std::make_shared<Counter>(pos, font);
+        case GateType::REGISTER: return std::make_shared<Register>(pos, font);
         default: return nullptr;
     }
 }

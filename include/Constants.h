@@ -152,52 +152,52 @@ namespace Theme {
 }
 
 namespace Config {
-    const float GateWidth = 120.0f;
-    const float GateHeight = 80.0f;
-    const float PinRadius = 9.0f;
-    const float TopMenuHeight = 45.0f;
-    const float PaletteWidth = 170.0f;
-    const float WireThickness = 6.0f;
-    const float WireThicknessSelected = 12.0f;  // Thicker when selected
-    const float GateCornerRadius = 15.0f;
-    const float GateOutlineThickness = 4.0f;
+    constexpr float GateWidth = 120.0f;
+    constexpr float GateHeight = 80.0f;
+    constexpr float PinRadius = 9.0f;
+    constexpr float TopMenuHeight = 45.0f;
+    constexpr float PaletteWidth = 170.0f;
+    constexpr float WireThickness = 6.0f;
+    constexpr float WireThicknessSelected = 12.0f;  // Thicker when selected
+    constexpr float GateCornerRadius = 15.0f;
+    constexpr float GateOutlineThickness = 4.0f;
 
     // Grid and snapping
-    const float GridSize = 20.0f;
-    const bool SnapToGridEnabled = true;
+    constexpr float GridSize = 20.0f;
+    constexpr bool SnapToGridEnabled = true;
 
     // Rotation
-    const float RotationStep = 90.0f;  // degrees
+    constexpr float RotationStep = 90.0f;  // degrees
 
     // Selection
-    const bool MultiSelectWithShift = true;
+    constexpr bool MultiSelectWithShift = true;
 
     // Selection rectangle visual
     const sf::Color SelectionRectFill = sf::Color(0, 160, 255, 50);  // Mais transparente
     const sf::Color SelectionRectOutline = sf::Color(0, 220, 255);   // Cor mais vibrante
-    const float SelectionRectOutlineThickness = 2.0f;
+    constexpr float SelectionRectOutlineThickness = 2.0f;
 
 // Selection indicators
 const sf::Color SelectionGlow = sf::Color(0, 220, 255, 80);
-const float SelectionGlowThickness = 6.0f;
+constexpr float SelectionGlowThickness = 6.0f;
 
 // ==================== PERFORMANCE SETTINGS ====================
 // LOD (Level of Detail) thresholds
-const float LODDistanceNear = 300.0f;      // Full detail
-const float LODDistanceFar = 800.0f;       // Minimal detail
-const size_t LODComponentThreshold = 50;   // Enable LOD when components exceed this
+constexpr float LODDistanceNear = 300.0f;      // Full detail
+constexpr float LODDistanceFar = 800.0f;       // Minimal detail
+constexpr size_t LODComponentThreshold = 50;   // Enable LOD when components exceed this
 
 // Performance optimization flags
-const bool EnableShadows = true;
-const bool EnableEffects = true;
-const bool EnableLOD = true;
+constexpr bool EnableShadows = true;
+constexpr bool EnableEffects = true;
+constexpr bool EnableLOD = true;
 
 // ==================== ACCESSIBILITY SETTINGS ====================
     // Font scale multipliers
-    const float FontScaleSmall = 0.75f;
-    const float FontScaleNormal = 1.0f;
-    const float FontScaleLarge = 1.25f;
-    const float FontScaleXLarge = 1.5f;
+    constexpr float FontScaleSmall = 0.75f;
+    constexpr float FontScaleNormal = 1.0f;
+    constexpr float FontScaleLarge = 1.25f;
+    constexpr float FontScaleXLarge = 1.5f;
 
     // Visual pattern types for colorblind accessibility
     enum class PatternType {

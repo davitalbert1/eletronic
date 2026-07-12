@@ -3,7 +3,12 @@
 #include <array>
 
 // Labels for each GateType (order must match GateType enum)
-static const std::array<std::string, 5> GateLabels = {"AND", "OR", "NOT", "CLOCK", "POWER"};
+static const std::array<std::string, 17> GateLabels = {
+    "AND", "OR", "NOT", "CLOCK", "POWER",
+    "XOR", "NAND", "NOR", "XNOR", "ROM",
+    "7SEG", "LCD", "LED", "SWITCH", "BUTTON",
+    "COUNTER", "REG"
+};
 
 // Pin implementation
 Pin::Pin(PinType t, sf::Vector2f o, Gate* p) : type(t), offset(o), parent(p) {
@@ -48,7 +53,7 @@ float Gate::getExtraData() const {
 }
 void  Gate::setExtraData(float) {}
 
-void Gate::draw(sf::RenderWindow& window) {
+void Gate::drawBase(sf::RenderWindow& window) {
     // Draw pronounced shadow for cartoon effect
     sf::RectangleShape shadow;
     shadow.setSize(body.getSize());
@@ -69,8 +74,8 @@ void Gate::draw(sf::RenderWindow& window) {
     // Draw bottom shadow for 3D cartoon effect
     sf::RectangleShape bottomShadow;
     bottomShadow.setSize({body.getSize().x - Config::GateOutlineThickness * 2 - 4, 8});
-    bottomShadow.setPosition(body.getPosition() + sf::Vector2f(Config::GateOutlineThickness + 2, 
-                                                              body.getSize().y - Config::GateOutlineThickness - 10));
+    bottomShadow.setPosition(body.getPosition() + sf::Vector2f(Config::GateOutlineThickness + 2,
+                                                               body.getSize().y - Config::GateOutlineThickness - 10));
     bottomShadow.setFillColor(sf::Color(0, 0, 0, 50));
     window.draw(bottomShadow);
 
@@ -125,6 +130,10 @@ void Gate::draw(sf::RenderWindow& window) {
         pin.update(position);
         window.draw(pin.shape);
     }
+}
+
+void Gate::draw(sf::RenderWindow& window) {
+    drawBase(window);
 }
 
 void Gate::setPosition(sf::Vector2f pos) {

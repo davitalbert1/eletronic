@@ -30,7 +30,20 @@ enum class GateType {
     OR,
     NOT,
     CLOCK,
-    POWER
+    POWER,
+    // Novos componentes
+    XOR,
+    NAND,
+    NOR,
+    XNOR,
+    ROM,
+    SEG7,
+    LCD,
+    LED,
+    SWITCH,
+    BUTTON,
+    COUNTER,
+    REGISTER
 };
 
 class Gate {
@@ -40,11 +53,15 @@ public:
 
     virtual void updateLogic() = 0;
 
-    void draw(sf::RenderWindow& window);
+    virtual void draw(sf::RenderWindow& window);
+    // Reação ao clique do usuário (toggle, pulso, troca de padrão, etc.)
+    virtual void interact() {}
+    void drawBase(sf::RenderWindow& window);
+
     void setPosition(sf::Vector2f pos);
     void setRotation(float angle);
     float getRotation() const;
-    void updateLabelPos();
+    virtual void updateLabelPos();
     bool contains(sf::Vector2f point) const;
 
     sf::Vector2f getPosition() const;

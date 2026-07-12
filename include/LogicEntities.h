@@ -5,7 +5,6 @@
 #include <cstdint>
 
 // Forward declarations para os tipos de chip (definidos em include/chip/).
-// O .cpp que implementa CustomChip inclui os headers completos.
 namespace chip {
     class ChipDefinition;
     class Circuit;
@@ -428,8 +427,12 @@ public:
         prevClk = clk;
         for (int i = 0; i < 4; ++i) outputs[i].state = (count >> i) & 1;
     }
-    float getExtraData() const override { return (float)count; }
-    void setExtraData(float data) override { count = (int)data & 0xF; }
+    float getExtraData() const override {
+        return (float)count;
+    }
+    void setExtraData(float data) override {
+        count = (int)data & 0xF;
+    }
     std::shared_ptr<Gate> clone(const sf::Font& font) const override {
         auto g = std::make_shared<Counter>(getPosition(), font);
         g->setExtraData(getExtraData());
@@ -480,12 +483,7 @@ private:
     bool prevClk = false;
 };
 
-// ============================================================================
-// Componentes de CHIP PERSONALIZADO
-// ============================================================================
-
-// Pino de ENTRADA: marca um pino externo do chip. Tem 1 saída interna que
-// recebe o sinal vindo do exterior (definido pelo nome do pino).
+// Pino de ENTRADA: marca um pino externo do chip.
 class InputPin : public Gate {
 public:
     InputPin(sf::Vector2f pos, const sf::Font& font, const std::string& name = "IN")
@@ -511,8 +509,7 @@ private:
     std::string pinName_;
 };
 
-// Pino de SAÍDA: marca um pino externo do chip. Tem 1 entrada interna; o
-// CustomChip lê esse valor e o expõe como saída externa do chip.
+// Pino de SAÍDA: marca um pino externo do chip.
 class OutputPin : public Gate {
 public:
     OutputPin(sf::Vector2f pos, const sf::Font& font, const std::string& name = "OUT")
@@ -537,38 +534,34 @@ private:
     std::string pinName_;
 };
 
-// Instância de um chip personalizado. É um Gate comum: possui entradas e
-// saídas externas e, internamente, simula o Circuit clonado da definição.
-// Suporta hierarquia (o circuito pode conter outros CustomChips) e a
-// proteção contra loops é feita no momento do registro (ChipLibrary).
 class CustomChip : public Gate {
 public:
-    // Constrói a instância a partir de uma definição. Clona o circuito
-    // interno para que cada instância seja independente.
-    CustomChip(sf::Vector2f pos, const sf::Font& font,
-               const std::shared_ptr<chip::ChipDefinition>& def);
+    // Constrói a instância a partir de uma definição.
+    CustomChip(sf::Vector2f pos, const sf::Font& font, const std::shared_ptr<chip::ChipDefinition>& def);
 
-    void updateLogic() override;          // alimenta internos, simula, lê saídas
-    void interact() override;             // clica propaga para o circuito interno
+    void updateLogic() override; // alimenta internos, simula, lê saídas
+    void interact() override; // clica propaga para o circuito interno
     std::shared_ptr<Gate> clone(const sf::Font& font) const override;
 
-    std::string getChipId() const override { return chipId_; }
+    std::string getChipId() const override {
+        return chipId_;
+    }
 
     // Acesso à definição (para edição/atualização).
-    std::shared_ptr<chip::ChipDefinition> getDefinition() const { return definition_; }
+    std::shared_ptr<chip::ChipDefinition> getDefinition() const {
+        return definition_;
+    }
 
     // Recalcula entradas/saídas externas a partir da definição (usado após
     // atualizar o chip). Recria o circuito interno.
-    void rebuild(const sf::Font& font);
-
 private:
     std::shared_ptr<chip::ChipDefinition> definition_;
-    std::shared_ptr<chip::Circuit> internal_;   // cópia independente do circuito
+    std::shared_ptr<chip::Circuit> internal_; // cópia independente do circuito
     std::string chipId_;
 
     // Mapeia índice de pino externo -> InputPin/OutputPin interno.
-    std::vector<InputPin*>  inputPins_;   // [i] = pino interno da entrada i
-    std::vector<OutputPin*> outputPins_;  // [i] = pino interno da saída i
+    std::vector<InputPin*> inputPins_; // [i] = pino interno da entrada i
+    std::vector<OutputPin*> outputPins_; // [i] = pino interno da saída i
 };
 
 #endif

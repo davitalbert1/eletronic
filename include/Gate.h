@@ -58,11 +58,10 @@ public:
     virtual void updateLogic() = 0;
 
     virtual void draw(sf::RenderWindow& window);
-    // Reação ao clique do usuário (toggle, pulso, troca de padrão, etc.)
+
     virtual void interact() {}
     void drawBase(sf::RenderWindow& window);
 
-    // Cria uma cópia independente deste gate (usado ao instanciar chips ao duplicar componentes).
     virtual std::shared_ptr<Gate> clone(const sf::Font& font) const = 0;
 
     void setPosition(sf::Vector2f pos);
@@ -77,10 +76,12 @@ public:
     virtual float getExtraData() const;
     virtual void setExtraData(float data);
 
-    // Acessores usados pela serialização de chips. Sem efeito na maioria
-    // dos componentes; sobrescritos por InputPin/OutputPin e CustomChip.
-    virtual std::string getChipId() const { return ""; }
-    virtual std::string getPinName() const { return ""; }
+    virtual std::string getChipId() const {
+        return "";
+    }
+    virtual std::string getPinName() const {
+        return "";
+    }
     virtual void setPinName(const std::string&) {}
 
     std::vector<Pin> inputs;

@@ -111,17 +111,17 @@ namespace Theme {
         const sf::Color Background = sf::Color(0, 0, 0);
         const sf::Color Panel = sf::Color(0, 0, 0);
         const sf::Color TopMenu = sf::Color(0, 0, 0);
-        const sf::Color Accent = sf::Color(255, 255, 0);  // Yellow for maximum visibility
-        const sf::Color Text = sf::Color(255, 255, 255);  // Pure white
+        const sf::Color Accent = sf::Color(255, 255, 0); // Yellow for maximum visibility
+        const sf::Color Text = sf::Color(255, 255, 255); // Pure white
 
         const sf::Color GateBody = sf::Color(0, 0, 0);
-        const sf::Color GateOutline = sf::Color(255, 255, 255);  // White outline
+        const sf::Color GateOutline = sf::Color(255, 255, 255); // White outline
         const sf::Color GateHighlight = sf::Color(255, 255, 255, 200);
         const sf::Color GateShadow = sf::Color(255, 255, 255, 100);
         const sf::Color Highlight = sf::Color(255, 255, 0);
 
         const sf::Color SignalOff = sf::Color(128, 128, 128);
-        const sf::Color SignalOn = sf::Color(255, 255, 0);  // Yellow for on state
+        const sf::Color SignalOn = sf::Color(255, 255, 0); // Yellow for on state
 
         const sf::Color WireOn = sf::Color(255, 255, 0);
         const sf::Color WireOff = sf::Color(128, 128, 128);
@@ -156,7 +156,7 @@ namespace Config {
     constexpr float TopMenuHeight = 45.0f;
     constexpr float PaletteWidth = 170.0f;
     constexpr float WireThickness = 6.0f;
-    constexpr float WireThicknessSelected = 12.0f;  // Thicker when selected
+    constexpr float WireThicknessSelected = 12.0f;
     constexpr float GateCornerRadius = 15.0f;
     constexpr float GateOutlineThickness = 4.0f;
 
@@ -165,33 +165,31 @@ namespace Config {
     constexpr bool SnapToGridEnabled = true;
 
     // Rotation
-    constexpr float RotationStep = 90.0f;  // degrees
+    constexpr float RotationStep = 90.0f; // degrees
 
     // Selection
     constexpr bool MultiSelectWithShift = true;
 
     // Selection rectangle visual
-    const sf::Color SelectionRectFill = sf::Color(0, 160, 255, 50);  // Mais transparente
-    const sf::Color SelectionRectOutline = sf::Color(0, 220, 255);   // Cor mais vibrante
+    const sf::Color SelectionRectFill = sf::Color(0, 160, 255, 50); // Mais transparente
+    const sf::Color SelectionRectOutline = sf::Color(0, 220, 255); // Cor mais vibrante
     constexpr float SelectionRectOutlineThickness = 2.0f;
 
 // Selection indicators
 const sf::Color SelectionGlow = sf::Color(0, 220, 255, 80);
 constexpr float SelectionGlowThickness = 6.0f;
 
-// ==================== PERFORMANCE SETTINGS ====================
-// LOD (Level of Detail) thresholds
-constexpr float LODDistanceNear = 300.0f;      // Full detail
-constexpr float LODDistanceFar = 800.0f;       // Minimal detail
-constexpr size_t LODComponentThreshold = 50;   // Enable LOD when components exceed this
+// PERFORMANCE SETTINGS
+constexpr float LODDistanceNear = 300.0f; // Full detail
+constexpr float LODDistanceFar = 800.0f; // Minimal detail
+constexpr size_t LODComponentThreshold = 50; // Enable LOD when components exceed this
 
 // Performance optimization flags
 constexpr bool EnableShadows = true;
 constexpr bool EnableEffects = true;
 constexpr bool EnableLOD = true;
 
-// ==================== ACCESSIBILITY SETTINGS ====================
-    // Font scale multipliers
+// ACCESSIBILITY SETTINGS
     constexpr float FontScaleSmall = 0.75f;
     constexpr float FontScaleNormal = 1.0f;
     constexpr float FontScaleLarge = 1.25f;
@@ -199,17 +197,16 @@ constexpr bool EnableLOD = true;
 
     // Visual pattern types for colorblind accessibility
     enum class PatternType {
-        NONE,           // No pattern (default)
-        STRIPES,        // Diagonal stripes
-        DOTS,           // Dots pattern
-        GRID,           // Grid pattern
-        WAVES           // Wave pattern
+        NONE,  // No pattern (default)
+        STRIPES, // Diagonal stripes
+        DOTS, // Dots pattern
+        GRID, // Grid pattern
+        WAVES // Wave pattern
     };
 }
 
 // Accessibility helper functions
 namespace Accessibility {
-    // Get current theme colors based on theme type
     inline sf::Color getBackground(ThemeType theme) {
         if (theme == ThemeType::LIGHT) return Theme::Light::Background;
         if (theme == ThemeType::HIGH_CONTRAST) return Theme::HighContrast::Background;

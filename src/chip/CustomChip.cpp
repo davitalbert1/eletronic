@@ -29,8 +29,7 @@ void CustomChip::rebuild(const sf::Font& font) {
         outputs.emplace_back(PinType::OUTPUT, sf::Vector2f(Config::GateWidth, 20 + i * dy), this);
     }
 
-    // Mapeia pinos externos -> InputPin/OutputPin internos (pela ordem em
-    // que aparecem no circuito, que refreshFromCircuit preserva).
+    // Mapeia pinos externos -> InputPin/OutputPin internos
     auto inPins = internal_->findGatesOfType(GateType::INPUT_PIN);
     auto outPins = internal_->findGatesOfType(GateType::OUTPUT_PIN);
     for (auto* g : inPins)  inputPins_.push_back(static_cast<InputPin*>(g));

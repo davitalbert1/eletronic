@@ -146,7 +146,7 @@ void WorkbenchUI::drawPalette(sf::RenderWindow& window) {
     window.draw(paletteRect_);
 }
 
-void WorkbenchUI::drawModal(sf::RenderWindow& window, bool isSaveModal, bool isLoadModal, float modalAlpha) {
+void WorkbenchUI::drawModal(sf::RenderWindow& window, bool isSaveModal, bool isLoadModal, bool showStartupDialog, float modalAlpha) {
     if (isSaveModal || isLoadModal || modalAlpha > 0) {
         sf::Color overlayColor = overlay_.getFillColor();
         std::uint8_t overlayAlpha = static_cast<std::uint8_t>(modalAlpha * 0.8f);
@@ -154,15 +154,42 @@ void WorkbenchUI::drawModal(sf::RenderWindow& window, bool isSaveModal, bool isL
         window.draw(overlay_);
 
         sf::Color modalColor = modalRect_.getFillColor();
+        // Use larger modal for startup dialog
+        float modalH = showStartupDialog ? LoadModalH : ModalH;
+        modalRect_.setSize({ModalW, modalH});
+        modalRect_.setPosition({ModalX, ModalY});
         std::uint8_t modalAlphaUint8 = static_cast<std::uint8_t>(modalAlpha);
         modalRect_.setFillColor(sf::Color(modalColor.r, modalColor.g, modalColor.b, modalAlphaUint8));
         window.draw(modalRect_);
 
         modalTitle_.setPosition({ModalX + 20, ModalY + 15});
-        modalTitle_.setString(isSaveModal ? "Salvar Projeto" : "Carregar Projeto");
+        if (showStartupDialog) {
+            modalTitle_.setString("Bem-vindo! Selecione um projeto");
+        } else {
+            modalTitle_.setString(isSaveModal ? "Salvar Projeto" : "Carregar Projeto");
+        }
         std::uint8_t titleAlpha = static_cast<std::uint8_t>(modalAlpha);
         modalTitle_.setFillColor(sf::Color(Theme::Highlight.r, Theme::Highlight.g, Theme::Highlight.b, titleAlpha));
         window.draw(modalTitle_);
+
+        // Draw "New Project" button on startup dialog
+        if (showStartupDialog) {
+            sf::FloatRect newBtn = loadNewProjectBtnRect();
+            sf::RectangleShape newBtnShape(newBtn.size);
+            newBtnShape.setPosition(newBtn.position);
+            newBtnShape.setFillColor(Theme::ButtonActive);
+            newBtnShape.setOutlineThickness(1);
+            newBtnShape.setOutlineColor(Theme::Highlight);
+            window.draw(newBtnShape);
+
+            sf::Text newBtnText(font_);
+            newBtnText.setFont(font_);
+            newBtnText.setString("+ Novo Projeto");
+            newBtnText.setCharacterSize(14);
+            newBtnText.setFillColor(sf::Color::White);
+            newBtnText.setPosition({newBtn.position.x + 15, newBtn.position.y + 4});
+            window.draw(newBtnText);
+        }
     }
 }
 
@@ -500,6 +527,10 @@ sf::FloatRect WorkbenchUI::loadDetailPanelRect() const {
 
 sf::FloatRect WorkbenchUI::loadSaveMetaBtnRect() const {
     return sf::FloatRect({ModalX + ModalW - 140, ModalY + ModalH - 35}, {120, 26});
+}
+
+sf::FloatRect WorkbenchUI::loadNewProjectBtnRect() const {
+    return sf::FloatRect({ModalX + 20, ModalY + ModalH - 35}, {140, 26});
 }
 
 sf::FloatRect WorkbenchUI::importResultRect() {

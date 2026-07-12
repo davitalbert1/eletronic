@@ -19,6 +19,12 @@ Workbench::Workbench(const sf::Font& font)
     , confirmationDialog_(std::make_unique<ConfirmationDialog>()) {
     refreshChipPalette();
     refreshCategories();
+    // Startup: show project selection dialog
+    showStartupDialog_ = true;
+    isLoadModal_ = true;
+    refreshProjectList();
+    statusMessage_ = "Bem-vindo! Selecione um projeto para abrir ou crie um novo.";
+    statusMessageTimer_ = 8.0f;
 }
 
 void Workbench::newProject() {
@@ -29,6 +35,8 @@ void Workbench::newProject() {
     currentDescription_ = "";
     currentTags_ = "";
     if (undoRedoManager_) undoRedoManager_->clear();
+    showStartupDialog_ = false;
+    isLoadModal_ = false;
 }
 
 // ---------------------------------------------------------------------------
@@ -312,7 +320,7 @@ void Workbench::draw(sf::RenderWindow& window) {
     ui_.drawConfirmationDialog(window, showConfirmDialog_, confirmMessage_);
 
     if (isSaveModal_ || isLoadModal_) {
-        ui_.drawModal(window, isSaveModal_, isLoadModal_, ui_.getModalAlpha());
+        ui_.drawModal(window, isSaveModal_, isLoadModal_, showStartupDialog_, ui_.getModalAlpha());
     }
 
     if (showHelp_) drawHelpOverlay(window);
@@ -533,6 +541,10 @@ void Workbench::handleEvent(const sf::Event& event, const sf::RenderWindow& wind
                     int sortInt = (static_cast<int>(currentFilter_) + 1) % 7;
                     currentFilter_ = static_cast<WorkbenchInput::SelectionFilter>(sortInt);
                     applySort();
+                } else if (ui_.loadNewProjectBtnRect().contains(mousePosF)) {
+                    // "New Project" button clicked (on startup dialog)
+                    newProject();
+                    return;
                 }
             }
         }
@@ -635,6 +647,7 @@ void Workbench::handleEvent(const sf::Event& event, const sf::RenderWindow& wind
                 }
                 if (ui_.getLoadText().getGlobalBounds().contains(mousePosF)) {
                     isLoadModal_ = true;
+                    showStartupDialog_ = false;
                     refreshCategories();
                     refreshProjectList();
                     ui_.setShowDropdown(false);
@@ -756,6 +769,7 @@ void Workbench::load(const std::string& name) {
                                    currentDescription_, currentTags_, font_)) {
         statusMessage_ = "Projeto carregado: " + name + " (" + std::to_string(placedGates_.size()) + " componentes)";
         statusMessageTimer_ = 3.0f;
+        showStartupDialog_ = false;
     } else {
         statusMessage_ = "Falha ao carregar projeto: " + name;
         statusMessageTimer_ = 5.0f;

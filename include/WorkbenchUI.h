@@ -17,7 +17,7 @@ public:
     // Drawing methods
     void drawMenu(sf::RenderWindow& window);
     void drawPalette(sf::RenderWindow& window);
-    void drawModal(sf::RenderWindow& window, bool isSaveModal, bool isLoadModal, float modalAlpha);
+    void drawModal(sf::RenderWindow& window, bool isSaveModal, bool isLoadModal, bool showStartupDialog, float modalAlpha);
     void drawTooltip(sf::RenderWindow& window, const sf::Vector2f& mousePos);
     void drawProgressBar(sf::RenderWindow& window, bool isSaving, bool isLoading, float progress);
     void drawStatusMessage(sf::RenderWindow& window, const std::string& message, float timer);
@@ -147,6 +147,7 @@ public:
     sf::FloatRect loadStarRect(size_t i) const;
     sf::FloatRect loadDetailPanelRect() const;
     sf::FloatRect loadSaveMetaBtnRect() const;
+    sf::FloatRect loadNewProjectBtnRect() const;
 
     // Import result dialog
     static sf::FloatRect importResultRect();

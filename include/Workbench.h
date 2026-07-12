@@ -90,6 +90,7 @@ private:
     // Modal state
     bool isSaveModal_ = false;
     bool isLoadModal_ = false;
+    bool showStartupDialog_ = true;
     bool saveAsMode_ = false;
     std::string inputBuffer_;
     std::string categoryBuffer_;

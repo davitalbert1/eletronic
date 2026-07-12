@@ -1,4 +1,4 @@
-## Compilação
+## Build
 
 ```bash
 rm -rf build
@@ -6,12 +6,11 @@ cmake -S . -B build
 cmake --build build
 ```
 
-### Executar diretamente
+### Run Directly
 
 ```bash
 # Windows
 build/simulator.exe
-
 ```
 
 ```bash

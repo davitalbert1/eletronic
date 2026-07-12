@@ -209,13 +209,13 @@ Este documento apresenta uma análise completa dos pontos de melhoria de usabili
 
 ### 7.1 Componentes Faltantes
 **Sugerido em ideias.md:**
-- [ ] Adicionar porta XOR
-- [ ] Adicionar portas NAND, NOR, XNOR
-- [ ] Adicionar memória ROM
-- [ ] Adicionar display (7 segmentos, LCD)
-- [ ] Adicionar LEDs indicadores
-- [ ] Adicionar botões/switchs
-- [ ] Adicionar contadores/registradores
+- [x] Adicionar porta XOR
+- [x] Adicionar portas NAND, NOR, XNOR
+- [x] Adicionar memória ROM
+- [x] Adicionar display (7 segmentos, LCD)
+- [x] Adicionar LEDs indicadores
+- [x] Adicionar botões/switchs
+- [x] Adicionar contadores/registradores
 
 ### 7.2 Recursos de Simulação
 **Sugestões:**

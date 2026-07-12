@@ -43,7 +43,11 @@ enum class GateType {
     SWITCH,
     BUTTON,
     COUNTER,
-    REGISTER
+    REGISTER,
+    // Componentes de chip personalizado
+    INPUT_PIN,   // Pino de entrada (marca pino externo do chip)
+    OUTPUT_PIN,  // Pino de saída (marca pino externo do chip)
+    CHIP         // Instância de chip personalizado
 };
 
 class Gate {
@@ -58,6 +62,9 @@ public:
     virtual void interact() {}
     void drawBase(sf::RenderWindow& window);
 
+    // Cria uma cópia independente deste gate (usado ao instanciar chips ao duplicar componentes).
+    virtual std::shared_ptr<Gate> clone(const sf::Font& font) const = 0;
+
     void setPosition(sf::Vector2f pos);
     void setRotation(float angle);
     float getRotation() const;
@@ -69,6 +76,12 @@ public:
 
     virtual float getExtraData() const;
     virtual void setExtraData(float data);
+
+    // Acessores usados pela serialização de chips. Sem efeito na maioria
+    // dos componentes; sobrescritos por InputPin/OutputPin e CustomChip.
+    virtual std::string getChipId() const { return ""; }
+    virtual std::string getPinName() const { return ""; }
+    virtual void setPinName(const std::string&) {}
 
     std::vector<Pin> inputs;
     std::vector<Pin> outputs;

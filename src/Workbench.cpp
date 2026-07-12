@@ -16,7 +16,7 @@ Workbench::Workbench(const sf::Font& font)
     , ui_(font)
     , undoRedoManager_(std::make_unique<UndoRedoManager>(50))
     , confirmationDialog_(std::make_unique<ConfirmationDialog>()) {
-    setupPalette();
+    refreshChipPalette();
     refreshCategories();
 }
 
@@ -28,6 +28,144 @@ void Workbench::newProject() {
     currentDescription_ = "";
     currentTags_ = "";
     if (undoRedoManager_) undoRedoManager_->clear();
+}
+
+// ---------------------------------------------------------------------------
+// Chips personalizados
+// ---------------------------------------------------------------------------
+
+void Workbench::refreshChipPalette() {
+    // Reconstrói a paleta: componentes fixos + InputPin/OutputPin + chips.
+    paletteItems_.clear();
+    chipPaletteIds_.clear();
+
+    auto add = [&](std::shared_ptr<Gate> g) { paletteItems_.push_back(g); };
+
+    add(std::make_shared<ANDGate>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<ORGate>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<NOTGate>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<XORGate>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<NANDGate>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<NORGate>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<XNORGate>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<ClockGate>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<PowerSource>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Switch>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Button>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<LED>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<ROM>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Seg7Display>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<LCDDisplay>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Counter>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Register>(sf::Vector2f(0, 0), font_));
+    // Marcadores de pino (necessários para criar chips)
+    add(std::make_shared<InputPin>(sf::Vector2f(0, 0), font_, "IN"));
+    add(std::make_shared<OutputPin>(sf::Vector2f(0, 0), font_, "OUT"));
+
+    // Chips registrados na biblioteca
+    for (auto& def : chip::ChipLibrary::instance().all()) {
+        auto inst = chip::createChipInstance(def, sf::Vector2f(0, 0), font_);
+        if (inst) {
+            paletteItems_.push_back(inst);
+            chipPaletteIds_.push_back(def->id);
+        }
+    }
+    updatePalettePositions();
+}
+
+bool Workbench::saveCurrentAsChip(const std::string& id, const std::string& name,
+                                  const std::string& description, const std::string& category,
+                                  bool askUpdate) {
+    // 1) Clona o circuito atual (gates + wires) para a definição.
+    auto circuit = std::make_shared<chip::Circuit>();
+    circuit->gates.reserve(placedGates_.size());
+    for (auto& g : placedGates_) circuit->gates.push_back(g->clone(font_));
+    // Reconecta fios usando índices estáveis.
+    for (auto& w : wires_) {
+        int gFrom = -1, pFrom = -1, gTo = -1, pTo = -1;
+        for (size_t i = 0; i < placedGates_.size(); ++i) {
+            if (placedGates_[i].get() == w.fromPin->parent) gFrom = (int)i;
+            if (placedGates_[i].get() == w.toPin->parent)   gTo   = (int)i;
+        }
+        for (size_t i = 0; i < w.fromPin->parent->outputs.size(); ++i)
+            if (&w.fromPin->parent->outputs[i] == w.fromPin) pFrom = (int)i;
+        for (size_t i = 0; i < w.toPin->parent->inputs.size(); ++i)
+            if (&w.toPin->parent->inputs[i] == w.toPin) pTo = (int)i;
+        if (gFrom >= 0 && gTo >= 0 && pFrom >= 0 && pTo >= 0)
+            circuit->wires.emplace_back(&circuit->gates[gFrom]->outputs[pFrom],
+                                        &circuit->gates[gTo]->inputs[pTo]);
+    }
+
+    // 2) Cria a definição e calcula pinos/dependências.
+    auto def = std::make_shared<chip::ChipDefinition>();
+    def->id = id;
+    def->name = name;
+    def->description = description;
+    def->category = category;
+    def->version = 1;
+    def->circuit = circuit;
+    def->refreshFromCircuit();
+
+    if (!def->isValid()) {
+        statusMessage_ = "O circuito precisa de ao menos 1 Entrada e 1 Saida.";
+        statusMessageTimer_ = 5.0f;
+        return false;
+    }
+
+    // 3) Proteção contra dependência circular.
+    if (!chip::ChipLibrary::instance().registerChip(def)) {
+        statusMessage_ = "Erro: isso criaria uma dependencia circular (loop).";
+        statusMessageTimer_ = 5.0f;
+        return false;
+    }
+
+    // 4) Persiste o arquivo .chip para uso futuro.
+    fs::path dir = "projetos/chips";
+    fs::create_directories(dir);
+    chip::saveChipDefinition(def, (dir / (id + ".chip")).string());
+
+    refreshChipPalette();
+    statusMessage_ = "Chip '" + name + "' criado e adicionado a biblioteca.";
+    statusMessageTimer_ = 4.0f;
+    return true;
+}
+
+void Workbench::updateChipFromCurrent(const std::string& id) {
+    auto def = chip::ChipLibrary::instance().findById(id);
+    if (!def) return;
+
+    // Reconstrói o circuito interno a partir do atual.
+    auto circuit = std::make_shared<chip::Circuit>();
+    circuit->gates.reserve(placedGates_.size());
+    for (auto& g : placedGates_) circuit->gates.push_back(g->clone(font_));
+    for (auto& w : wires_) {
+        int gFrom = -1, pFrom = -1, gTo = -1, pTo = -1;
+        for (size_t i = 0; i < placedGates_.size(); ++i) {
+            if (placedGates_[i].get() == w.fromPin->parent) gFrom = (int)i;
+            if (placedGates_[i].get() == w.toPin->parent)   gTo   = (int)i;
+        }
+        for (size_t i = 0; i < w.fromPin->parent->outputs.size(); ++i)
+            if (&w.fromPin->parent->outputs[i] == w.fromPin) pFrom = (int)i;
+        for (size_t i = 0; i < w.toPin->parent->inputs.size(); ++i)
+            if (&w.toPin->parent->inputs[i] == w.toPin) pTo = (int)i;
+        if (gFrom >= 0 && gTo >= 0 && pFrom >= 0 && pTo >= 0)
+            circuit->wires.emplace_back(&circuit->gates[gFrom]->outputs[pFrom],
+                                        &circuit->gates[gTo]->inputs[pTo]);
+    }
+    def->circuit = circuit;
+    def->refreshFromCircuit();
+    def->version++;
+
+    // Atualiza todas as instâncias ativas (rebuild do circuito interno).
+    for (auto& g : placedGates_) {
+        if (g->getType() == GateType::CHIP && g->getChipId() == id) {
+            auto* chip = static_cast<CustomChip*>(g.get());
+            chip->rebuild(font_);
+        }
+    }
+    chip::saveChipDefinition(def, ("projetos/chips/" + id + ".chip"));
+    statusMessage_ = "Chip '" + def->name + "' atualizado (v" + std::to_string(def->version) + ").";
+    statusMessageTimer_ = 4.0f;
 }
 
 void Workbench::saveState() {
@@ -481,61 +619,11 @@ void Workbench::handleEvent(const sf::Event& event, const sf::RenderWindow& wind
             // Palette interaction
             for (auto& item : paletteItems_) {
                 if (item->contains(mousePosF)) {
-                    std::shared_ptr<Gate> newGate;
-                    switch (item->getType()) {
-                        case GateType::AND:
-                            newGate = std::make_shared<ANDGate>(mousePosF, font_);
-                            break;
-                        case GateType::OR:
-                            newGate = std::make_shared<ORGate>(mousePosF, font_);
-                            break;
-                        case GateType::NOT:
-                            newGate = std::make_shared<NOTGate>(mousePosF, font_);
-                            break;
-                        case GateType::XOR:
-                            newGate = std::make_shared<XORGate>(mousePosF, font_);
-                            break;
-                        case GateType::NAND:
-                            newGate = std::make_shared<NANDGate>(mousePosF, font_);
-                            break;
-                        case GateType::NOR:
-                            newGate = std::make_shared<NORGate>(mousePosF, font_);
-                            break;
-                        case GateType::XNOR:
-                            newGate = std::make_shared<XNORGate>(mousePosF, font_);
-                            break;
-                        case GateType::CLOCK:
-                            newGate = std::make_shared<ClockGate>(mousePosF, font_);
-                            break;
-                        case GateType::POWER:
-                            newGate = std::make_shared<PowerSource>(mousePosF, font_);
-                            break;
-                        case GateType::SWITCH:
-                            newGate = std::make_shared<Switch>(mousePosF, font_);
-                            break;
-                        case GateType::BUTTON:
-                            newGate = std::make_shared<Button>(mousePosF, font_);
-                            break;
-                        case GateType::LED:
-                            newGate = std::make_shared<LED>(mousePosF, font_);
-                            break;
-                        case GateType::ROM:
-                            newGate = std::make_shared<ROM>(mousePosF, font_);
-                            break;
-                        case GateType::SEG7:
-                            newGate = std::make_shared<Seg7Display>(mousePosF, font_);
-                            break;
-                        case GateType::LCD:
-                            newGate = std::make_shared<LCDDisplay>(mousePosF, font_);
-                            break;
-                        case GateType::COUNTER:
-                            newGate = std::make_shared<Counter>(mousePosF, font_);
-                            break;
-                        case GateType::REGISTER:
-                            newGate = std::make_shared<Register>(mousePosF, font_);
-                            break;
-                    }
+                    // Usa clone() para criar uma nova instância independente
+                    // (funciona para portas, pinos e chips personalizados).
+                    std::shared_ptr<Gate> newGate = item->clone(font_);
                     if (newGate) {
+                        newGate->setPosition(mousePosF);
                         for (auto& g : placedGates_) g->isSelected = false;
                         newGate->isSelected = true;
                         newGate->isDragging = true;
@@ -714,6 +802,20 @@ void Workbench::renderImGui() {
         isLoadModal_ = true;
         refreshCategories();
         refreshProjectList();
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Chips personalizados:");
+    static char chipId[64] = "meu_chip";
+    static char chipName[64] = "Meu Chip";
+    static char chipDesc[128] = "";
+    static char chipCat[64] = "Chips";
+    ImGui::InputText("ID", chipId, sizeof(chipId));
+    ImGui::InputText("Nome", chipName, sizeof(chipName));
+    ImGui::InputText("Categoria", chipCat, sizeof(chipCat));
+    ImGui::InputText("Descricao", chipDesc, sizeof(chipDesc));
+    if (ImGui::Button("Salvar como Chip")) {
+        saveCurrentAsChip(chipId, chipName, chipDesc, chipCat);
     }
 
     ImGui::Separator();

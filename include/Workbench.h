@@ -14,6 +14,9 @@
 #include "WorkbenchInput.h"
 #include "WorkbenchAccessibility.h"
 #include "WorkbenchPerformance.h"
+#include "chip/ChipLibrary.h"
+#include "chip/ChipFactory.h"
+#include "chip/ChipDefinition.h"
 
 class Workbench {
 public:
@@ -23,6 +26,18 @@ public:
     void newProject();
     void save(const std::string& name);
     void load(const std::string& name);
+
+    // Chips personalizados
+    // Converte o circuito atual em um chip reutilizável. Requer que o
+    // projeto contenha ao menos um InputPin e um OutputPin.
+    // 'askUpdate' controla se instâncias existentes devem ser atualizadas.
+    bool saveCurrentAsChip(const std::string& id, const std::string& name,
+                           const std::string& description, const std::string& category,
+                           bool askUpdate = true);
+    // Atualiza a definição de um chip já registrado a partir do circuito atual.
+    void updateChipFromCurrent(const std::string& id);
+    // Adiciona um chip da biblioteca à paleta (chamado após registrar).
+    void refreshChipPalette();
 
     // Rendering
     void draw(sf::RenderWindow& window);
@@ -114,6 +129,9 @@ private:
     static constexpr float PaletteTop = Config::TopMenuHeight + 20.0f;
     static constexpr float PaletteViewBottom = 800.0f;
     void updatePalettePositions();
+
+    // Itens de paleta que representam chips (id da definição).
+    std::vector<std::string> chipPaletteIds_;
 
     // Undo/Redo
     std::unique_ptr<UndoRedoManager> undoRedoManager_;

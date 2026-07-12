@@ -12,9 +12,9 @@ enum class ThemeType {
 
 // Font scale enumeration
 enum class FontScale {
-    SMALL,   // 0.75x
-    NORMAL,  // 1.0x
-    LARGE,   // 1.25x
+    SMALL, // 0.75x
+    NORMAL, // 1.0x
+    LARGE, // 1.25x
     XLARGE // 1.5x
 };
 
@@ -66,7 +66,6 @@ namespace Theme {
     const sf::Color ProgressFill = sf::Color(0, 200, 255);
     const sf::Color ProgressBorder = sf::Color(100, 100, 120);
 
-    // ==================== LIGHT THEME ====================
     namespace Light {
         const sf::Color Background = sf::Color(240, 240, 245);
         const sf::Color Panel = sf::Color(255, 255, 255);
@@ -108,7 +107,6 @@ namespace Theme {
         const sf::Color ProgressBorder = sf::Color(150, 150, 160);
     }
 
-    // ==================== HIGH CONTRAST THEME ====================
     namespace HighContrast {
         const sf::Color Background = sf::Color(0, 0, 0);
         const sf::Color Panel = sf::Color(0, 0, 0);

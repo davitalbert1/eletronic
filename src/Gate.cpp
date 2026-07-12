@@ -3,11 +3,11 @@
 #include <array>
 
 // Labels for each GateType (order must match GateType enum)
-static const std::array<std::string, 17> GateLabels = {
+static const std::array<std::string, 20> GateLabels = {
     "AND", "OR", "NOT", "CLOCK", "POWER",
     "XOR", "NAND", "NOR", "XNOR", "ROM",
     "7SEG", "LCD", "LED", "SWITCH", "BUTTON",
-    "COUNTER", "REG"
+    "COUNTER", "REG", "IN", "OUT", "CHIP"
 };
 
 // Pin implementation

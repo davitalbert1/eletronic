@@ -4,6 +4,13 @@
 #include <array>
 #include <cstdint>
 
+// Forward declarations para os tipos de chip (definidos em include/chip/).
+// O .cpp que implementa CustomChip inclui os headers completos.
+namespace chip {
+    class ChipDefinition;
+    class Circuit;
+}
+
 class ANDGate : public Gate {
 public:
     ANDGate(sf::Vector2f pos, const sf::Font& font) : Gate(GateType::AND, pos, font) {
@@ -15,6 +22,9 @@ public:
     }
     void updateLogic() override {
         outputs[0].state = inputs[0].state && inputs[1].state;
+    }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        return std::make_shared<ANDGate>(getPosition(), font);
     }
 };
 
@@ -30,6 +40,9 @@ public:
     void updateLogic() override {
         outputs[0].state = inputs[0].state || inputs[1].state;
     }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        return std::make_shared<ORGate>(getPosition(), font);
+    }
 };
 
 class NOTGate : public Gate {
@@ -42,6 +55,9 @@ public:
     }
     void updateLogic() override {
         outputs[0].state = !inputs[0].state;
+    }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        return std::make_shared<NOTGate>(getPosition(), font);
     }
 };
 
@@ -68,6 +84,11 @@ public:
         setState(data > 0.5f);
     }
     void updateLogic() override {} // State is manual
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        auto g = std::make_shared<PowerSource>(getPosition(), font);
+        g->setExtraData(getExtraData());
+        return g;
+    }
 };
 
 class ClockGate : public Gate {
@@ -105,6 +126,11 @@ public:
         interval = data;
         updateLabel();
     }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        auto g = std::make_shared<ClockGate>(getPosition(), font);
+        g->setExtraData(interval);
+        return g;
+    }
 private:
     sf::Clock clock;
     float interval = 1.0f;
@@ -122,6 +148,9 @@ public:
     void updateLogic() override {
         outputs[0].state = inputs[0].state != inputs[1].state;
     }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        return std::make_shared<XORGate>(getPosition(), font);
+    }
 };
 
 class NANDGate : public Gate {
@@ -135,6 +164,9 @@ public:
     }
     void updateLogic() override {
         outputs[0].state = !(inputs[0].state && inputs[1].state);
+    }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        return std::make_shared<NANDGate>(getPosition(), font);
     }
 };
 
@@ -150,6 +182,9 @@ public:
     void updateLogic() override {
         outputs[0].state = !(inputs[0].state || inputs[1].state);
     }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        return std::make_shared<NORGate>(getPosition(), font);
+    }
 };
 
 class XNORGate : public Gate {
@@ -163,6 +198,9 @@ public:
     }
     void updateLogic() override {
         outputs[0].state = !(inputs[0].state != inputs[1].state);
+    }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        return std::make_shared<XNORGate>(getPosition(), font);
     }
 };
 
@@ -191,6 +229,11 @@ public:
     }
     float getExtraData() const override { return (float)presetIndex; }
     void setExtraData(float data) override { loadPreset((int)data); }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        auto g = std::make_shared<ROM>(getPosition(), font);
+        g->setExtraData((float)presetIndex);
+        return g;
+    }
 private:
     int presetIndex = 0;
     std::array<uint8_t, 16> contents{};
@@ -239,6 +282,9 @@ public:
         if (seg & 32) window.draw(segRect(x, y + h/2 + g/2, h, h)); // f (top-left)
         if (seg & 64) window.draw(segRect(x + w/2 - h/2, y + h + g, w, h)); // g (middle)
     }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        return std::make_shared<Seg7Display>(getPosition(), font);
+    }
 private:
     int seg = 0;
     static constexpr std::array<int, 16> SEG_MAP = {
@@ -277,6 +323,9 @@ public:
         charText_.setPosition({position.x + Config::GateWidth/2 - 12, position.y + 92});
         window.draw(charText_);
     }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        return std::make_shared<LCDDisplay>(getPosition(), font);
+    }
 private:
     int value = 0;
     sf::Text charText_;
@@ -301,6 +350,9 @@ public:
         bulb.setOutlineThickness(3);
         bulb.setOutlineColor(Theme::GateOutline);
         window.draw(bulb);
+    }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        return std::make_shared<LED>(getPosition(), font);
     }
 private:
     bool lit = false;
@@ -328,6 +380,11 @@ public:
         label.setFillColor(on ? Theme::SignalOn : Theme::Text);
         updateLabelPos();
     }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        auto g = std::make_shared<Switch>(getPosition(), font);
+        g->setExtraData(getExtraData());
+        return g;
+    }
 private:
     bool on = false;
 };
@@ -344,6 +401,9 @@ public:
     void updateLogic() override {
         outputs[0].state = pulse > 0;
         if (pulse > 0) --pulse;
+    }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        return std::make_shared<Button>(getPosition(), font);
     }
 private:
     int pulse = 0;
@@ -370,6 +430,11 @@ public:
     }
     float getExtraData() const override { return (float)count; }
     void setExtraData(float data) override { count = (int)data & 0xF; }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        auto g = std::make_shared<Counter>(getPosition(), font);
+        g->setExtraData(getExtraData());
+        return g;
+    }
 private:
     int count = 0;
     bool prevClk = false;
@@ -405,9 +470,105 @@ public:
         int v = (int)data & 0xF;
         for (int i = 0; i < 4; ++i) stored[i] = (v >> i) & 1;
     }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        auto g = std::make_shared<Register>(getPosition(), font);
+        g->setExtraData(getExtraData());
+        return g;
+    }
 private:
     bool stored[4] = {false, false, false, false};
     bool prevClk = false;
+};
+
+// ============================================================================
+// Componentes de CHIP PERSONALIZADO
+// ============================================================================
+
+// Pino de ENTRADA: marca um pino externo do chip. Tem 1 saída interna que
+// recebe o sinal vindo do exterior (definido pelo nome do pino).
+class InputPin : public Gate {
+public:
+    InputPin(sf::Vector2f pos, const sf::Font& font, const std::string& name = "IN")
+        : Gate(GateType::INPUT_PIN, pos, font), pinName_(name) {
+        label.setString(name);
+        outputs.emplace_back(PinType::OUTPUT, sf::Vector2f(Config::GateWidth, 35), this);
+        setPosition(pos);
+    }
+    void updateLogic() override {
+        // O sinal já foi escrito em outputs[0].state pelo CustomChip antes
+        // da simulação interna; aqui apenas propagamos (sem alteração).
+    }
+    std::string getPinName() const override { return pinName_; }
+    void setPinName(const std::string& n) override {
+        pinName_ = n;
+        label.setString(n);
+        updateLabelPos();
+    }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        return std::make_shared<InputPin>(getPosition(), font, pinName_);
+    }
+private:
+    std::string pinName_;
+};
+
+// Pino de SAÍDA: marca um pino externo do chip. Tem 1 entrada interna; o
+// CustomChip lê esse valor e o expõe como saída externa do chip.
+class OutputPin : public Gate {
+public:
+    OutputPin(sf::Vector2f pos, const sf::Font& font, const std::string& name = "OUT")
+        : Gate(GateType::OUTPUT_PIN, pos, font), pinName_(name) {
+        label.setString(name);
+        inputs.emplace_back(PinType::INPUT, sf::Vector2f(0, 35), this);
+        setPosition(pos);
+    }
+    void updateLogic() override {
+        // O valor de entrada é lido pelo CustomChip após a simulação interna.
+    }
+    std::string getPinName() const override { return pinName_; }
+    void setPinName(const std::string& n) override {
+        pinName_ = n;
+        label.setString(n);
+        updateLabelPos();
+    }
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override {
+        return std::make_shared<OutputPin>(getPosition(), font, pinName_);
+    }
+private:
+    std::string pinName_;
+};
+
+// Instância de um chip personalizado. É um Gate comum: possui entradas e
+// saídas externas e, internamente, simula o Circuit clonado da definição.
+// Suporta hierarquia (o circuito pode conter outros CustomChips) e a
+// proteção contra loops é feita no momento do registro (ChipLibrary).
+class CustomChip : public Gate {
+public:
+    // Constrói a instância a partir de uma definição. Clona o circuito
+    // interno para que cada instância seja independente.
+    CustomChip(sf::Vector2f pos, const sf::Font& font,
+               const std::shared_ptr<chip::ChipDefinition>& def);
+
+    void updateLogic() override;          // alimenta internos, simula, lê saídas
+    void interact() override;             // clica propaga para o circuito interno
+    std::shared_ptr<Gate> clone(const sf::Font& font) const override;
+
+    std::string getChipId() const override { return chipId_; }
+
+    // Acesso à definição (para edição/atualização).
+    std::shared_ptr<chip::ChipDefinition> getDefinition() const { return definition_; }
+
+    // Recalcula entradas/saídas externas a partir da definição (usado após
+    // atualizar o chip). Recria o circuito interno.
+    void rebuild(const sf::Font& font);
+
+private:
+    std::shared_ptr<chip::ChipDefinition> definition_;
+    std::shared_ptr<chip::Circuit> internal_;   // cópia independente do circuito
+    std::string chipId_;
+
+    // Mapeia índice de pino externo -> InputPin/OutputPin interno.
+    std::vector<InputPin*>  inputPins_;   // [i] = pino interno da entrada i
+    std::vector<OutputPin*> outputPins_;  // [i] = pino interno da saída i
 };
 
 #endif

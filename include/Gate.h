@@ -1,6 +1,4 @@
-#ifndef GATE_H
-#define GATE_H
-
+﻿#pragma once
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <string>
@@ -45,9 +43,9 @@ enum class GateType {
     COUNTER,
     REGISTER,
     // Componentes de chip personalizado
-    INPUT_PIN,   // Pino de entrada (marca pino externo do chip)
-    OUTPUT_PIN,  // Pino de saída (marca pino externo do chip)
-    CHIP         // Instância de chip personalizado
+    INPUT_PIN, // Pino de entrada (marca pino externo do chip)
+    OUTPUT_PIN, // Pino de saÃ­da (marca pino externo do chip)
+    CHIP // InstÃ¢ncia de chip personalizado
 };
 
 class Gate {
@@ -57,10 +55,10 @@ public:
 
     virtual void updateLogic() = 0;
 
-    virtual void draw(sf::RenderWindow& window);
+    virtual void draw(sf::RenderTarget& target);
 
     virtual void interact() {}
-    void drawBase(sf::RenderWindow& window);
+    void drawBase(sf::RenderTarget& target);
 
     virtual std::shared_ptr<Gate> clone(const sf::Font& font) const = 0;
 
@@ -96,5 +94,3 @@ protected:
     sf::RectangleShape body;
     sf::Text label;
 };
-
-#endif

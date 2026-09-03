@@ -1,6 +1,4 @@
-#ifndef CONFIRMATION_DIALOG_HPP
-#define CONFIRMATION_DIALOG_HPP
-
+﻿#pragma once
 #include <string>
 #include <functional>
 #include <SFML/Graphics.hpp>
@@ -19,9 +17,9 @@ public:
     ConfirmationDialog();
     ~ConfirmationDialog() = default;
 
-    void show(Action action, const std::string& message, 
-              std::function<void()> onConfirm = nullptr,
-              std::function<void()> onCancel = nullptr);
+    void show(Action action, const std::string& message,
+            std::function<void()> onConfirm = nullptr,
+            std::function<void()> onCancel = nullptr);
 
     void hide();
     bool isVisible() const;
@@ -51,5 +49,3 @@ private:
     static constexpr float NoButtonX = 560.0f;
     static constexpr float ButtonY = 430.0f;
 };
-
-#endif // CONFIRMATION_DIALOG_HPP

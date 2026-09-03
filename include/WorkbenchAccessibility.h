@@ -1,6 +1,4 @@
-#ifndef WORKBENCH_ACCESSIBILITY_HPP
-#define WORKBENCH_ACCESSIBILITY_HPP
-
+﻿#pragma once
 #include <SFML/Graphics.hpp>
 #include "Constants.h"
 
@@ -70,5 +68,3 @@ private:
     bool highContrastMode_ = false;
     bool largeTextMode_ = false;
 };
-
-#endif

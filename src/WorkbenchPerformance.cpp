@@ -118,10 +118,9 @@ bool WorkbenchPerformance::attemptRecovery(std::vector<std::shared_ptr<Gate>>& p
 
     if (!validateProjectData(placedGates, wires)) {
         wires.erase(
-            std::remove_if(wires.begin(), wires.end(),
-                [](const Wire& w) {
-                    return !w.fromPin || !w.toPin;
-                }),
+            std::remove_if(wires.begin(), wires.end(), [](const Wire& w) {
+                return !w.fromPin || !w.toPin;
+            }),
             wires.end()
         );
 

@@ -36,7 +36,7 @@ WorkbenchProject::ProjectInfo WorkbenchProject::readProjectInfo(const fs::path& 
     return info;
 }
 
-void WorkbenchProject::writeProject(const fs::path& p, 
+void WorkbenchProject::writeProject(const fs::path& p,
                                     const std::vector<std::shared_ptr<Gate>>& placedGates,
                                     const std::vector<Wire>& wires,
                                     const std::string& projectName,
@@ -48,7 +48,7 @@ void WorkbenchProject::writeProject(const fs::path& p,
 
     f << placedGates.size() << "\n";
     for (auto& g : placedGates) {
-        f << (int)g->getType() << " " << g->getPosition().x << " " << g->getPosition().y << " " 
+        f << (int)g->getType() << " " << g->getPosition().x << " " << g->getPosition().y << " "
           << g->getExtraData() << " " << g->getRotation() << "\n";
     }
 
@@ -111,7 +111,11 @@ bool WorkbenchProject::loadProject(const fs::path& p,
     while (gateCount--) {
         std::string line;
         std::getline(f, line);
-        if (line.empty()) { ++gateCount; continue; } // skip blank lines
+        // skip blank lines
+        if (line.empty()) {
+            ++gateCount;
+            continue;
+        }
 
         std::istringstream iss(line);
         int t;
@@ -192,9 +196,8 @@ bool WorkbenchProject::loadProject(const fs::path& p,
             int gF, pF, gT, pT;
             if (!(f >> gF >> pF >> gT >> pT)) break;
 
-            if (gF >= 0 && gF < (int)placedGates.size() && 
+            if (gF >= 0 && gF < (int)placedGates.size() &&
                 gT >= 0 && gT < (int)placedGates.size()) {
-
                 if (pF >= 0 && pF < (int)placedGates[gF]->outputs.size() &&
                     pT >= 0 && pT < (int)placedGates[gT]->inputs.size()) {
                     Pin* from = &placedGates[gF]->outputs[pF];
@@ -208,7 +211,7 @@ bool WorkbenchProject::loadProject(const fs::path& p,
     return true;
 }
 
-void WorkbenchProject::exportJSON(const std::string& baseName, 
+void WorkbenchProject::exportJSON(const std::string& baseName,
                                   const std::string& category,
                                   const std::vector<std::shared_ptr<Gate>>& placedGates,
                                   const std::vector<Wire>& wires) {
@@ -275,8 +278,8 @@ void WorkbenchProject::exportXML(const std::string& baseName,
     for (auto& w : wires) {
         int gFrom = -1, pFrom = -1, gTo = -1, pTo = -1;
         for (size_t gi = 0; gi < placedGates.size(); ++gi) {
-            if (placedGates[gi].get() == w.fromPin->parent) { gFrom = (int)gi; }
-            if (placedGates[gi].get() == w.toPin->parent) { gTo = (int)gi; }
+            if (placedGates[gi].get() == w.fromPin->parent) gFrom = (int)gi;
+            if (placedGates[gi].get() == w.toPin->parent) gTo = (int)gi;
         }
         for (size_t pi = 0; pi < w.fromPin->parent->outputs.size(); ++pi)
             if (&w.fromPin->parent->outputs[pi] == w.fromPin) pFrom = (int)pi;

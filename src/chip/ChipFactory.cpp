@@ -83,7 +83,7 @@ namespace chip {
             int gFrom = -1, pFrom = -1, gTo = -1, pTo = -1;
             for (size_t i = 0; i < def->circuit->gates.size(); ++i) {
                 if (def->circuit->gates[i].get() == w.fromPin->parent) gFrom = (int)i;
-                if (def->circuit->gates[i].get() == w.toPin->parent)   gTo   = (int)i;
+                if (def->circuit->gates[i].get() == w.toPin->parent) gTo = (int)i;
             }
             for (size_t i = 0; i < w.fromPin->parent->outputs.size(); ++i) {
                 if (&w.fromPin->parent->outputs[i] == w.fromPin) pFrom = (int)i;
@@ -217,7 +217,7 @@ namespace chip {
             int gFrom = -1, pFrom = -1, gTo = -1, pTo = -1;
             for (size_t i = 0; i < gates.size(); ++i) {
                 if (gates[i].get() == w.fromPin->parent) gFrom = (int)i;
-                if (gates[i].get() == w.toPin->parent)   gTo   = (int)i;
+                if (gates[i].get() == w.toPin->parent) gTo = (int)i;
             }
             for (size_t i = 0; i < w.fromPin->parent->outputs.size(); ++i) {
                 if (&w.fromPin->parent->outputs[i] == w.fromPin) pFrom = (int)i;

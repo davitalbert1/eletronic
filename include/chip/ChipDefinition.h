@@ -1,5 +1,4 @@
-#ifndef CHIP_CHIPDEFINITION_H
-#define CHIP_CHIPDEFINITION_H
+﻿#pragma once
 #include <string>
 #include <vector>
 #include <memory>
@@ -33,4 +32,3 @@ namespace chip {
     };
 }
 
-#endif

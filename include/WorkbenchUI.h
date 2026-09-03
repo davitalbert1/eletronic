@@ -1,6 +1,4 @@
-#ifndef WORKBENCH_UI_HPP
-#define WORKBENCH_UI_HPP
-
+﻿#pragma once
 #include <SFML/Graphics.hpp>
 #include "Constants.h"
 
@@ -205,5 +203,3 @@ private:
     // Palette
     sf::RectangleShape paletteRect_;
 };
-
-#endif

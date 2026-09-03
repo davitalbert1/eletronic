@@ -1,7 +1,7 @@
 #include "WorkbenchUI.h"
 #include <algorithm>
 
-WorkbenchUI::WorkbenchUI(const sf::Font& font) 
+WorkbenchUI::WorkbenchUI(const sf::Font& font)
     : font_(font)
     , menuText_(font_)
     , saveText_(font_)
@@ -328,7 +328,7 @@ void WorkbenchUI::drawHelpOverlay(sf::RenderWindow& window, bool show, const sf:
     helpText.setCharacterSize(16);
     helpText.setFillColor(Theme::Text);
 
-    std::string leftCol = 
+    std::string leftCol =
         "ARQUIVO:\n"
         "  Ctrl+N     - Novo projeto\n"
         "  Ctrl+S     - Salvar projeto\n"
@@ -350,7 +350,7 @@ void WorkbenchUI::drawHelpOverlay(sf::RenderWindow& window, bool show, const sf:
     helpText.setPosition({220, 170});
     window.draw(helpText);
 
-    std::string rightCol = 
+    std::string rightCol =
         "ACESSIBILIDADE:\n"
         "  F1         - Alternar tema (Escuro/Claro/Alto Contraste)\n"
         "  F2         - Alternar tamanho de fonte\n"

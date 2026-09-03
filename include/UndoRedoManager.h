@@ -1,6 +1,4 @@
-#ifndef UNDO_REDO_MANAGER_HPP
-#define UNDO_REDO_MANAGER_HPP
-
+﻿#pragma once
 #include <vector>
 #include <memory>
 #include "LogicEntities.h"
@@ -16,10 +14,10 @@ class UndoRedoManager {
         UndoRedoManager(size_t maxStates = 50);
         ~UndoRedoManager() = default;
 
-        void saveState(const std::vector<std::shared_ptr<Gate>>& gates,  const std::vector<Wire>& wires);
-        bool undo(std::vector<std::shared_ptr<Gate>>& gates,  std::vector<Wire>& wires);
+        void saveState(const std::vector<std::shared_ptr<Gate>>& gates, const std::vector<Wire>& wires);
+        bool undo(std::vector<std::shared_ptr<Gate>>& gates, std::vector<Wire>& wires);
 
-        bool redo(std::vector<std::shared_ptr<Gate>>& gates,  std::vector<Wire>& wires);
+        bool redo(std::vector<std::shared_ptr<Gate>>& gates, std::vector<Wire>& wires);
         bool canUndo() const;
         bool canRedo() const;
         void clear();
@@ -34,4 +32,3 @@ class UndoRedoManager {
         void trimRedoStack();
 };
 
-#endif

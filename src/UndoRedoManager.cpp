@@ -1,9 +1,9 @@
 #include "UndoRedoManager.h"
 #include <algorithm>
 
-UndoRedoManager::UndoRedoManager(size_t maxStates)  : maxStates(maxStates) {}
+UndoRedoManager::UndoRedoManager(size_t maxStates) : maxStates(maxStates) {}
 
-void UndoRedoManager::saveState(const std::vector<std::shared_ptr<Gate>>& gates, 
+void UndoRedoManager::saveState(const std::vector<std::shared_ptr<Gate>>& gates,
                                  const std::vector<Wire>& wires) {
     StateSnapshot snapshot;
     snapshot.gates = gates;
@@ -16,7 +16,7 @@ void UndoRedoManager::saveState(const std::vector<std::shared_ptr<Gate>>& gates,
     redoStack.clear();
 }
 
-bool UndoRedoManager::undo(std::vector<std::shared_ptr<Gate>>& gates, 
+bool UndoRedoManager::undo(std::vector<std::shared_ptr<Gate>>& gates,
                            std::vector<Wire>& wires) {
     if (undoStack.empty()) return false;
 
@@ -36,7 +36,7 @@ bool UndoRedoManager::undo(std::vector<std::shared_ptr<Gate>>& gates,
     return true;
 }
 
-bool UndoRedoManager::redo(std::vector<std::shared_ptr<Gate>>& gates, 
+bool UndoRedoManager::redo(std::vector<std::shared_ptr<Gate>>& gates,
                            std::vector<Wire>& wires) {
     if (redoStack.empty()) return false;
 

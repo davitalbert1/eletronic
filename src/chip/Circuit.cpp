@@ -14,7 +14,7 @@ namespace chip {
             int gFrom = -1, pFrom = -1, gTo = -1, pTo = -1;
             for (size_t i = 0; i < gates.size(); ++i) {
                 if (gates[i].get() == w.fromPin->parent) gFrom = (int)i;
-                if (gates[i].get() == w.toPin->parent)   gTo   = (int)i;
+                if (gates[i].get() == w.toPin->parent) gTo = (int)i;
             }
             for (size_t i = 0; i < w.fromPin->parent->outputs.size(); ++i) {
                 if (&w.fromPin->parent->outputs[i] == w.fromPin) pFrom = (int)i;
@@ -38,11 +38,8 @@ namespace chip {
             for (auto& pin : g->inputs) pin.state = false;
         }
 
-        // Propagar sinais pelos fios (output -> input).
-        for (auto& w : wires) w.update();
-
-        // Avaliar a lógica de cada gate.
-        for (auto& g : gates) g->updateLogic();
+        for (auto& w : wires) w.update(); // Propagar sinais pelos fios (output -> input).
+        for (auto& g : gates) g->updateLogic(); // Avaliar a lógica de cada gate.
     }
 
     void Circuit::draw(sf::RenderWindow& window) {

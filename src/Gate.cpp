@@ -36,7 +36,6 @@ bool Pin::contains(sf::Vector2f point) const {
 // Gate implementation
 Gate::Gate(GateType t, sf::Vector2f pos, const sf::Font& font)
     : type(t), position(pos), label(font, GateLabels[static_cast<int>(t)], 16) {
-
     body.setSize({Config::GateWidth, Config::GateHeight});
     body.setPosition(position);
     body.setFillColor(Theme::GateBody);
@@ -53,23 +52,23 @@ float Gate::getExtraData() const {
 }
 void  Gate::setExtraData(float) {}
 
-void Gate::drawBase(sf::RenderWindow& window) {
+void Gate::drawBase(sf::RenderTarget& target) {
     // Draw pronounced shadow for cartoon effect
     sf::RectangleShape shadow;
     shadow.setSize(body.getSize());
     shadow.setPosition(body.getPosition() + sf::Vector2f(7, 7));
     shadow.setFillColor(Theme::GateShadow);
-    window.draw(shadow);
+    target.draw(shadow);
 
     // Draw main body with thick outline
-    window.draw(body);
+    target.draw(body);
 
     // Draw top highlight for 3D cartoon effect
     sf::RectangleShape highlight;
     highlight.setSize({body.getSize().x - Config::GateOutlineThickness * 2 - 4, 8});
     highlight.setPosition(body.getPosition() + sf::Vector2f(Config::GateOutlineThickness + 2, Config::GateOutlineThickness + 2));
     highlight.setFillColor(Theme::GateHighlight);
-    window.draw(highlight);
+    target.draw(highlight);
 
     // Draw bottom shadow for 3D cartoon effect
     sf::RectangleShape bottomShadow;
@@ -77,7 +76,7 @@ void Gate::drawBase(sf::RenderWindow& window) {
     bottomShadow.setPosition(body.getPosition() + sf::Vector2f(Config::GateOutlineThickness + 2,
                                                                body.getSize().y - Config::GateOutlineThickness - 10));
     bottomShadow.setFillColor(sf::Color(0, 0, 0, 50));
-    window.draw(bottomShadow);
+    target.draw(bottomShadow);
 
     // Draw selection outline with cartoon style
     if (isSelected) {
@@ -88,7 +87,7 @@ void Gate::drawBase(sf::RenderWindow& window) {
         glowOutline.setFillColor(sf::Color::Transparent);
         glowOutline.setOutlineThickness(Config::SelectionGlowThickness);
         glowOutline.setOutlineColor(Config::SelectionGlow);
-        window.draw(glowOutline);
+        target.draw(glowOutline);
 
         // Main selection outline
         sf::RectangleShape selectionOutline;
@@ -97,7 +96,7 @@ void Gate::drawBase(sf::RenderWindow& window) {
         selectionOutline.setFillColor(sf::Color::Transparent);
         selectionOutline.setOutlineThickness(4);
         selectionOutline.setOutlineColor(Theme::Highlight);
-        window.draw(selectionOutline);
+        target.draw(selectionOutline);
 
         // Corner accents for better visibility
         float cornerSize = 8.0f;
@@ -117,23 +116,23 @@ void Gate::drawBase(sf::RenderWindow& window) {
 
         for (int i = 0; i < 4; ++i) {
             corners[i].setFillColor(Theme::Highlight);
-            window.draw(corners[i]);
+            target.draw(corners[i]);
         }
     }
 
-    window.draw(label);
-    for (auto& pin : inputs)  {
+    target.draw(label);
+    for (auto& pin : inputs) {
         pin.update(position);
-        window.draw(pin.shape);
+        target.draw(pin.shape);
     }
     for (auto& pin : outputs) {
         pin.update(position);
-        window.draw(pin.shape);
+        target.draw(pin.shape);
     }
 }
 
-void Gate::draw(sf::RenderWindow& window) {
-    drawBase(window);
+void Gate::draw(sf::RenderTarget& target) {
+    drawBase(target);
 }
 
 void Gate::setPosition(sf::Vector2f pos) {
@@ -154,7 +153,7 @@ void Gate::updateLabelPos() {
     sf::FloatRect bounds = label.getLocalBounds();
     label.setOrigin({bounds.position.x + bounds.size.x / 2.0f,
                      bounds.position.y + bounds.size.y / 2.0f});
-    label.setPosition({position.x + Config::GateWidth  / 2.0f,
+    label.setPosition({position.x + Config::GateWidth / 2.0f,
                        position.y + Config::GateHeight / 2.0f});
 }
 

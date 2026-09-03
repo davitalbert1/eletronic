@@ -1,5 +1,6 @@
 #include "Workbench.h"
 #include "Constants.h"
+#include "chip/Json.h"
 #include <SFML/Graphics.hpp>
 #include <imgui.h>
 #include <algorithm>
@@ -39,16 +40,15 @@ void Workbench::newProject() {
     isLoadModal_ = false;
 }
 
-// ---------------------------------------------------------------------------
 // Chips personalizados
-// ---------------------------------------------------------------------------
-
 void Workbench::refreshChipPalette() {
     // Reconstrói a paleta: componentes fixos + InputPin/OutputPin + chips.
     paletteItems_.clear();
     chipPaletteIds_.clear();
 
-    auto add = [&](std::shared_ptr<Gate> g) { paletteItems_.push_back(g); };
+    auto add = [&](std::shared_ptr<Gate> g) {
+        paletteItems_.push_back(g);
+    };
 
     add(std::make_shared<ANDGate>(sf::Vector2f(0, 0), font_));
     add(std::make_shared<ORGate>(sf::Vector2f(0, 0), font_));
@@ -94,12 +94,14 @@ bool Workbench::saveCurrentAsChip(const std::string& id, const std::string& name
         int gFrom = -1, pFrom = -1, gTo = -1, pTo = -1;
         for (size_t i = 0; i < placedGates_.size(); ++i) {
             if (placedGates_[i].get() == w.fromPin->parent) gFrom = (int)i;
-            if (placedGates_[i].get() == w.toPin->parent)   gTo   = (int)i;
+            if (placedGates_[i].get() == w.toPin->parent) gTo = (int)i;
         }
-        for (size_t i = 0; i < w.fromPin->parent->outputs.size(); ++i)
+        for (size_t i = 0; i < w.fromPin->parent->outputs.size(); ++i) {
             if (&w.fromPin->parent->outputs[i] == w.fromPin) pFrom = (int)i;
-        for (size_t i = 0; i < w.toPin->parent->inputs.size(); ++i)
+        }
+        for (size_t i = 0; i < w.toPin->parent->inputs.size(); ++i) {
             if (&w.toPin->parent->inputs[i] == w.toPin) pTo = (int)i;
+        }
         if (gFrom >= 0 && gTo >= 0 && pFrom >= 0 && pTo >= 0)
             circuit->wires.emplace_back(&circuit->gates[gFrom]->outputs[pFrom],
                                         &circuit->gates[gTo]->inputs[pTo]);
@@ -151,7 +153,7 @@ void Workbench::updateChipFromCurrent(const std::string& id) {
         int gFrom = -1, pFrom = -1, gTo = -1, pTo = -1;
         for (size_t i = 0; i < placedGates_.size(); ++i) {
             if (placedGates_[i].get() == w.fromPin->parent) gFrom = (int)i;
-            if (placedGates_[i].get() == w.toPin->parent)   gTo   = (int)i;
+            if (placedGates_[i].get() == w.toPin->parent) gTo = (int)i;
         }
         for (size_t i = 0; i < w.fromPin->parent->outputs.size(); ++i)
             if (&w.fromPin->parent->outputs[i] == w.fromPin) pFrom = (int)i;
@@ -387,7 +389,7 @@ void Workbench::handleEvent(const sf::Event& event, const sf::RenderWindow& wind
             if (keyPressed->code == sf::Keyboard::Key::Escape) return;
         }
 
-        if (event.is<sf::Event::MouseButtonPressed>() || 
+        if (event.is<sf::Event::MouseButtonPressed>() ||
             event.is<sf::Event::KeyPressed>() ||
             event.is<sf::Event::TextEntered>()) {
             return;
@@ -557,10 +559,10 @@ void Workbench::handleEvent(const sf::Event& event, const sf::RenderWindow& wind
             if (mousePressed->button == sf::Mouse::Button::Left) {
                 if (ui_.importResultCloseBtn().contains(mousePosF)) {
                     showImportResultDialog_ = false;
-                    statusMessage_ = "Importacao concluida: " + 
-                        std::to_string(lastImportResult_.convertedComponents) + 
+                    statusMessage_ = "Importacao concluida: " +
+                        std::to_string(lastImportResult_.convertedComponents) +
                         " componentes convertidos, " +
-                        std::to_string(lastImportResult_.convertedConnections) + 
+                        std::to_string(lastImportResult_.convertedConnections) +
                         " conexoes.";
                     statusMessageTimer_ = 5.0f;
                     return;
@@ -585,7 +587,7 @@ void Workbench::handleEvent(const sf::Event& event, const sf::RenderWindow& wind
     ui_.setSaveHovered(ui_.getSaveText().getGlobalBounds().contains(mousePosF));
     ui_.setLoadHovered(ui_.getLoadText().getGlobalBounds().contains(mousePosF));
     ui_.setSaveAsHovered(ui_.getSaveAsText().getGlobalBounds().contains(mousePosF));
-    ui_.setImportDlsHovered(ui_.showDropdown() && 
+    ui_.setImportDlsHovered(ui_.showDropdown() &&
         ui_.getImportDlsText().getGlobalBounds().contains(mousePosF));
 
     if (ui_.isMenuButtonHovered() && !ui_.showDropdown()) {
@@ -882,6 +884,29 @@ void Workbench::renderImGui() {
     }
     if (ImGui::Button("Export XML")) {
         if (!currentProjectName_.empty()) projectManager_.exportXML(currentProjectName_, currentCategory_, placedGates_, wires_);
+    if (ImGui::Button("Export JSON")) {
+        if (!currentProjectName_.empty()) exportJSONEnhanced(currentProjectName_, currentCategory_);
+    }
+    if (ImGui::Button("Export XML")) {
+        if (!currentProjectName_.empty()) exportXMLEnhanced(currentProjectName_, currentCategory_);
+    }
+    if (ImGui::Button("Export PNG")) {
+        if (!currentProjectName_.empty()) exportToImage(currentProjectName_ + ".png", "png");
+    }
+    if (ImGui::Button("Export SVG")) {
+        if (!currentProjectName_.empty()) exportToImage(currentProjectName_ + ".svg", "svg");
+    }
+    if (ImGui::Button("Export PDF")) {
+        if (!currentProjectName_.empty()) exportToPDF(currentProjectName_ + ".pdf");
+    }
+
+    ImGui::Separator();
+    if (ImGui::Button("Import Circuit Language (.cdl)")) {
+        showCircuitLanguageDialog_ = true;
+    }
+    if (ImGui::Button("Export Circuit Language (.cdl)")) {
+        if (!currentProjectName_.empty()) exportToCircuitLanguage(currentProjectName_ + ".cdl");
+    }
     }
 
     ImGui::Separator();
@@ -958,7 +983,7 @@ void Workbench::toggleStarred(size_t index) {
 
 void Workbench::deleteProject(size_t index) {
     if (index >= projectInfos_.size()) return;
-    std::string msg = "Tem certeza que deseja excluir o projeto:\n\"" + 
+    std::string msg = "Tem certeza que deseja excluir o projeto:\n\"" +
                       projectInfos_[index].name + "\"?\n\nEsta ação não pode ser desfeita.";
     showConfirmation(ConfirmationDialog::Action::DELETE_PROJECT, msg, index);
 }
@@ -1045,10 +1070,7 @@ void Workbench::saveEmergencyBackup() {
     performance_.saveEmergencyBackup(currentProjectName_, placedGates_, wires_);
 }
 
-// ---------------------------------------------------------------------------
 // Digital Logic Sim Import
-// ---------------------------------------------------------------------------
-
 void Workbench::importDigitalLogicSimProject(const std::string& filePath) {
     // Realiza a importação
     lastImportResult_ = dlsImporter_.importFromFile(filePath, font_);
@@ -1139,7 +1161,7 @@ void Workbench::drawImportResultDialog(sf::RenderWindow& window) {
             unsupportedStr += "  - " + lastImportResult_.unsupportedComponents[i] + "\n";
         }
         if (lastImportResult_.unsupportedComponents.size() > 15) {
-            unsupportedStr += "  ... e mais " + 
+            unsupportedStr += "  ... e mais " +
                 std::to_string(lastImportResult_.unsupportedComponents.size() - 15) + " componentes\n";
         }
 
@@ -1177,4 +1199,159 @@ void Workbench::drawImportResultDialog(sf::RenderWindow& window) {
     closeText.setFillColor(sf::Color::White);
     closeText.setPosition({closeBtn.position.x + 20, closeBtn.position.y + 5});
     window.draw(closeText);
+}
+
+// Circuit Language Parser
+void Workbench::importFromCircuitLanguage(const std::string& filePath) {
+    auto result = circuitLanguageParser_.parseFromFile(filePath, font_);
+    if (!result.success) {
+        statusMessage_ = "Erro ao importar: " + result.errorMessage;
+        statusMessageTimer_ = 5.0f;
+        return;
+    }
+    placedGates_.clear();
+    wires_.clear();
+    placedGates_ = result.gates;
+    wires_ = result.wires;
+    currentProjectName_ = result.circuitName;
+    statusMessage_ = "Importado: " + result.circuitName + " (" +
+                     std::to_string(placedGates_.size()) + " componentes)";
+    statusMessageTimer_ = 8.0f;
+}
+
+void Workbench::exportToCircuitLanguage(const std::string& filePath) {
+    std::string description = circuitLanguageParser_.generateDescription(
+        placedGates_, wires_, currentProjectName_, currentDescription_);
+    std::ofstream file(filePath);
+    if (!file.is_open()) {
+        statusMessage_ = "Erro ao exportar: " + filePath;
+        statusMessageTimer_ = 3.0f;
+        return;
+    }
+    file << description;
+    file.close();
+    statusMessage_ = "Exportado (CDL): " + filePath;
+    statusMessageTimer_ = 5.0f;
+}
+
+void Workbench::exportToImage(const std::string& filePath, const std::string& format) {
+    ImageExportResult result;
+    if (format == "png" || format == "PNG") {
+        result = imageExporter_.exportToPNG(filePath, placedGates_, wires_);
+    } else if (format == "svg" || format == "SVG") {
+        result = imageExporter_.exportToSVG(filePath, placedGates_, wires_);
+    } else {
+        statusMessage_ = "Formato nao suportado: " + format;
+        statusMessageTimer_ = 3.0f;
+        return;
+    }
+    if (result.success) {
+        statusMessage_ = "Imagem exportada: " + filePath;
+        statusMessageTimer_ = 5.0f;
+    } else {
+        statusMessage_ = "Erro ao exportar imagem: " + result.errorMessage;
+        statusMessageTimer_ = 5.0f;
+    }
+}
+
+void Workbench::exportToPDF(const std::string& filePath) {
+    pdfOptions_.title = currentProjectName_.empty() ? "Circuit" : currentProjectName_;
+    pdfOptions_.description = currentDescription_;
+    pdfOptions_.category = currentCategory_;
+    pdfOptions_.tags = splitTags(currentTags_);
+
+    PdfExportResult result = pdfExporter_.exportToPDF(filePath, placedGates_, wires_, pdfOptions_);
+    if (result.success) {
+        statusMessage_ = "PDF exportado: " + filePath + " (" +
+                         std::to_string(result.pageCount) + " paginas)";
+        statusMessageTimer_ = 5.0f;
+    } else {
+        statusMessage_ = "Erro ao exportar PDF: " + result.errorMessage;
+        statusMessageTimer_ = 5.0f;
+    }
+}
+
+void Workbench::exportJSONEnhanced(const std::string& baseName, const std::string& category) {
+    auto jsonValue = chip::projectToJson(placedGates_, wires_, baseName, category,
+                                          currentDescription_, currentTags_);
+    jsonValue.set("exportVersion", "2.0");
+
+    auto now = std::time(nullptr);
+    auto tm = *std::localtime(&now);
+    char buf[64];
+    std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", &tm);
+    jsonValue.set("exportTimestamp", std::string(buf));
+
+    chip::JsonValue stats = chip::JsonValue::makeObject();
+    stats.set("totalGates", static_cast<int>(placedGates_.size()));
+    stats.set("totalWires", static_cast<int>(wires_.size()));
+    jsonValue.set("statistics", stats);
+
+    std::string jsonStr = chip::jsonToString(jsonValue, 2);
+    fs::path dir = "projetos";
+    fs::create_directories(dir);
+    fs::path filePath = dir / (baseName + "_enhanced.json");
+
+    std::ofstream file(filePath);
+    if (file.is_open()) {
+        file << jsonStr;
+        file.close();
+        statusMessage_ = "Exportado (JSON): " + filePath.string();
+        statusMessageTimer_ = 5.0f;
+    } else {
+        statusMessage_ = "Erro ao exportar JSON";
+        statusMessageTimer_ = 3.0f;
+    }
+}
+
+void Workbench::exportXMLEnhanced(const std::string& baseName, const std::string& category) {
+    std::ostringstream xml;
+    xml << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    xml << "<circuit>\n";
+    xml << "  <metadata>\n";
+    xml << "    <name>" << baseName << "</name>\n";
+    xml << "    <category>" << category << "</category>\n";
+    xml << "    <description>" << currentDescription_ << "</description>\n";
+    xml << "    <tags>" << currentTags_ << "</tags>\n";
+    xml << "    <version>2.0</version>\n";
+    xml << "  </metadata>\n";
+    xml << "  <statistics>\n";
+    xml << "    <totalGates>" << placedGates_.size() << "</totalGates>\n";
+    xml << "    <totalWires>" << wires_.size() << "</totalWires>\n";
+    xml << "  </statistics>\n";
+    xml << "  <components>\n";
+    for (size_t i = 0; i < placedGates_.size(); i++) {
+        const auto& gate = placedGates_[i];
+        sf::Vector2f pos = gate->getPosition();
+        xml << "    <gate id=\"" << i << "\" type=\"" << static_cast<int>(gate->getType()) << "\">\n";
+        xml << "      <position x=\"" << pos.x << "\" y=\"" << pos.y << "\"/>\n";
+        xml << "    </gate>\n";
+    }
+    xml << "  </components>\n";
+    xml << "  <connections>\n";
+    for (size_t i = 0; i < wires_.size(); i++) {
+        int fromIdx = -1, toIdx = -1;
+        for (size_t j = 0; j < placedGates_.size(); j++) {
+            if (placedGates_[j].get() == wires_[i].fromPin->parent) fromIdx = static_cast<int>(j);
+            if (placedGates_[j].get() == wires_[i].toPin->parent) toIdx = static_cast<int>(j);
+        }
+        xml << "    <wire id=\"" << i << "\" from=\"" << fromIdx << "\" to=\"" << toIdx << "\"/>\n";
+    }
+    xml << "  </connections>\n";
+    xml << "</circuit>\n";
+
+    fs::path dir = "projetos";
+    fs::create_directories(dir);
+    fs::path filePath = dir / (baseName + "_enhanced.xml");
+
+    std::ofstream file(filePath);
+    if (file.is_open()) {
+        file << xml.str();
+        file.close();
+        statusMessage_ = "Exportado (XML): " + filePath.string();
+        statusMessageTimer_ = 5.0f;
+    } else {
+        statusMessage_ = "Erro ao exportar XML";
+        statusMessageTimer_ = 3.0f;
+    }
 }

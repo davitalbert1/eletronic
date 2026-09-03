@@ -14,19 +14,19 @@ std::map<std::string, GateType> DigitalLogicSimImporter::buildComponentMap() {
     std::map<std::string, GateType> m;
 
     // Portas lógicas básicas
-    m["AND"]  = GateType::AND;
-    m["OR"]   = GateType::OR;
-    m["NOT"]  = GateType::NOT;
-    m["XOR"]  = GateType::XOR;
+    m["AND"] = GateType::AND;
+    m["OR"] = GateType::OR;
+    m["NOT"] = GateType::NOT;
+    m["XOR"] = GateType::XOR;
     m["NAND"] = GateType::NAND;
-    m["NOR"]  = GateType::NOR;
+    m["NOR"] = GateType::NOR;
     m["XNOR"] = GateType::XNOR;
 
     // Entradas e saídas
-    m["Input"]  = GateType::POWER;
-    m["IN"]     = GateType::POWER;
+    m["Input"] = GateType::POWER;
+    m["IN"] = GateType::POWER;
     m["Output"] = GateType::LED;
-    m["OUT"]    = GateType::LED;
+    m["OUT"] = GateType::LED;
 
     // Clock
     m["Clock"] = GateType::CLOCK;
@@ -36,15 +36,15 @@ std::map<std::string, GateType> DigitalLogicSimImporter::buildComponentMap() {
     m["Button"] = GateType::BUTTON;
 
     // Display
-    m["LED"]          = GateType::LED;
-    m["7-Segment"]    = GateType::SEG7;
-    m["7SEG"]         = GateType::SEG7;
+    m["LED"] = GateType::LED;
+    m["7-Segment"] = GateType::SEG7;
+    m["7SEG"] = GateType::SEG7;
     m["SevenSegment"] = GateType::SEG7;
-    m["LCD"]          = GateType::LCD;
+    m["LCD"] = GateType::LCD;
 
     // Memória e contadores
-    m["ROM"]      = GateType::ROM;
-    m["Counter"]  = GateType::COUNTER;
+    m["ROM"] = GateType::ROM;
+    m["Counter"] = GateType::COUNTER;
     m["Register"] = GateType::REGISTER;
 
     return m;
@@ -102,7 +102,7 @@ DLSProject DigitalLogicSimImporter::parseProject(const chip::JsonValue& root) {
     project.version = root.get("version").asInt(1);
 
     // O DLS pode usar "components" ou "gates" como nome do array
-    const chip::JsonValue& compArray = root.has("components")  ? root.get("components")  : root.get("gates");
+    const chip::JsonValue& compArray = root.has("components") ? root.get("components") : root.get("gates");
 
     if (compArray.isArray()) {
         for (size_t i = 0; i < compArray.arr.size(); ++i) {
@@ -135,17 +135,17 @@ DLSProject DigitalLogicSimImporter::parseProject(const chip::JsonValue& root) {
             }
 
             // Propriedades individuais comuns
-            if (jc.has("value"))  comp.properties["value"] = std::to_string(jc.get("value").asInt(0));
-            if (jc.has("state"))  comp.properties["state"] = jc.get("state").asString("off");
-            if (jc.has("bits"))  comp.properties["bits"] = std::to_string(jc.get("bits").asInt(1));
-            if (jc.has("frequency"))  comp.properties["frequency"] = std::to_string(jc.get("frequency").asNumber(1.0));
+            if (jc.has("value")) comp.properties["value"] = std::to_string(jc.get("value").asInt(0));
+            if (jc.has("state")) comp.properties["state"] = jc.get("state").asString("off");
+            if (jc.has("bits")) comp.properties["bits"] = std::to_string(jc.get("bits").asInt(1));
+            if (jc.has("frequency")) comp.properties["frequency"] = std::to_string(jc.get("frequency").asNumber(1.0));
 
             project.components.push_back(comp);
         }
     }
 
     // Conexões (podem estar em "connections" ou "wires")
-    const chip::JsonValue& connArray = root.has("connections")  ? root.get("connections")  : root.get("wires");
+    const chip::JsonValue& connArray = root.has("connections") ? root.get("connections") : root.get("wires");
 
     if (connArray.isArray()) {
         for (size_t i = 0; i < connArray.arr.size(); ++i) {
@@ -182,7 +182,7 @@ DLSProject DigitalLogicSimImporter::parseProject(const chip::JsonValue& root) {
     return project;
 }
 
-GateType DigitalLogicSimImporter::mapComponentType(const DLSComponent& dlsComp,  std::string& outLabel,  float& outExtra) {
+GateType DigitalLogicSimImporter::mapComponentType(const DLSComponent& dlsComp, std::string& outLabel, float& outExtra) {
     outLabel = dlsComp.label;
     outExtra = 0.0f;
 
@@ -196,7 +196,7 @@ GateType DigitalLogicSimImporter::mapComponentType(const DLSComponent& dlsComp, 
             // DLS Input: verifica se tem estado inicial
             auto stateIt = dlsComp.properties.find("state");
             if (stateIt != dlsComp.properties.end()) {
-                outExtra = (stateIt->second == "on" || stateIt->second == "1" || 
+                outExtra = (stateIt->second == "on" || stateIt->second == "1" ||
                            stateIt->second == "true") ? 1.0f : 0.0f;
             }
             // Se tiver label, usa como nome
@@ -349,9 +349,7 @@ bool DigitalLogicSimImporter::createGates(const DLSProject& project,
     return true;
 }
 
-// ---------------------------------------------------------------------------
 // Reconstrução das conexões
-// ---------------------------------------------------------------------------
 bool DigitalLogicSimImporter::createWires(const DLSProject& project,
                                            const std::vector<std::shared_ptr<Gate>>& gates,
                                            std::vector<Wire>& wires,
@@ -380,15 +378,13 @@ bool DigitalLogicSimImporter::createWires(const DLSProject& project,
         // Verifica se os pinos existem
         if (conn.fromPin >= 0 && conn.fromPin < (int)fromGate->outputs.size() &&
             conn.toPin >= 0 && conn.toPin < (int)toGate->inputs.size()) {
-
             Pin* fromPin = &fromGate->outputs[conn.fromPin];
             Pin* toPin = &toGate->inputs[conn.toPin];
 
             wires.emplace_back(fromPin, toPin);
             convertedConnections++;
-        }
-        // Tenta conectar ao primeiro pino disponível se o índice não existir
-        else if (!fromGate->outputs.empty() && !toGate->inputs.empty()) {
+        } else if (!fromGate->outputs.empty() && !toGate->inputs.empty()) {
+            // Tenta conectar ao primeiro pino disponível se o índice não existir
             // Tenta mapeamento inteligente: conecta saída 0 à entrada 0
             int fromPinIdx = std::min(conn.fromPin, (int)fromGate->outputs.size() - 1);
             int toPinIdx = std::min(conn.toPin, (int)toGate->inputs.size() - 1);
@@ -405,10 +401,8 @@ bool DigitalLogicSimImporter::createWires(const DLSProject& project,
     return true;
 }
 
-// ---------------------------------------------------------------------------
 // Importação principal
-// ---------------------------------------------------------------------------
-ImportResult DigitalLogicSimImporter::importFromFile(const std::string& filePath, 
+ImportResult DigitalLogicSimImporter::importFromFile(const std::string& filePath,
                                                       const sf::Font& font) {
     ImportResult result;
 
@@ -419,14 +413,14 @@ ImportResult DigitalLogicSimImporter::importFromFile(const std::string& filePath
         return result;
     }
 
-    std::string jsonText((std::istreambuf_iterator<char>(f)), 
+    std::string jsonText((std::istreambuf_iterator<char>(f)),
                           std::istreambuf_iterator<char>());
     f.close();
 
     return importFromJson(jsonText, font);
 }
 
-ImportResult DigitalLogicSimImporter::importFromJson(const std::string& jsonText, 
+ImportResult DigitalLogicSimImporter::importFromJson(const std::string& jsonText,
                                                       const sf::Font& font) {
     ImportResult result;
 
@@ -470,7 +464,7 @@ ImportResult DigitalLogicSimImporter::importFromJson(const std::string& jsonText
     }
 
     result.unsupportedComponents = unsupported;
-    result.convertedComponents = static_cast<int>(result.gates.size()) - 
+    result.convertedComponents = static_cast<int>(result.gates.size()) -
                                  static_cast<int>(unsupported.size());
 
     // Cria as conexões

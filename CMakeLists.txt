@@ -25,7 +25,7 @@ find_package(SFML 3.0 COMPONENTS Graphics Window System REQUIRED)
 target_link_libraries(simulator PRIVATE SFML::Graphics SFML::Window SFML::System)
 
 # Adicionar ImGui
-target_include_directories(simulator PRIVATE 
+target_include_directories(simulator PRIVATE
     vendor/imgui
     vendor/imgui/backends
     vendor/glad/include

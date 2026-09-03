@@ -915,7 +915,7 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandlerEx(HWND hwnd, UINT msg, WPA
     case WM_IME_COMPOSITION:
     {
         // Handling WM_IME_COMPOSITION ensure that WM_IME_CHAR value is correct even for MBCS apps.
-        // (see #9099, #3653 and https://stackoverflow.com/questions/77450354 topics) 
+        // (see #9099, #3653 and https://stackoverflow.com/questions/77450354 topics)
         LRESULT result = ::DefWindowProcW(hwnd, msg, wParam, lParam);
         return (lParam & GCS_RESULTSTR) ? 1 : result;
     }

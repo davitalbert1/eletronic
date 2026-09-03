@@ -1,6 +1,4 @@
-#ifndef WORKBENCH_HPP
-#define WORKBENCH_HPP
-
+﻿#pragma once
 #include <vector>
 #include <memory>
 #include <string>
@@ -17,6 +15,9 @@
 #include "chip/ChipLibrary.h"
 #include "chip/ChipFactory.h"
 #include "chip/ChipDefinition.h"
+#include "CircuitLanguageParser.h"
+#include "ImageExporter.h"
+#include "PdfExporter.h"
 #include "DigitalLogicSimImporter.h"
 
 class Workbench {
@@ -29,15 +30,15 @@ public:
     void load(const std::string& name);
 
     // Chips personalizados
-    // Converte o circuito atual em um chip reutilizável. Requer que o
+    // Converte o circuito atual em um chip reutilizÃ¡vel. Requer que o
     // projeto contenha ao menos um InputPin e um OutputPin.
-    // 'askUpdate' controla se instâncias existentes devem ser atualizadas.
+    // 'askUpdate' controla se instÃ¢ncias existentes devem ser atualizadas.
     bool saveCurrentAsChip(const std::string& id, const std::string& name,
                            const std::string& description, const std::string& category,
                            bool askUpdate = true);
-    // Atualiza a definição de um chip já registrado a partir do circuito atual.
+    // Atualiza a definiÃ§Ã£o de um chip jÃ¡ registrado a partir do circuito atual.
     void updateChipFromCurrent(const std::string& id);
-    // Adiciona um chip da biblioteca à paleta (chamado após registrar).
+    // Adiciona um chip da biblioteca Ã  paleta (chamado apÃ³s registrar).
     void refreshChipPalette();
 
     // Rendering
@@ -57,6 +58,20 @@ public:
 
     // Digital Logic Sim import
     void importDigitalLogicSimProject(const std::string& filePath);
+    // Circuit Language Parser
+    void importFromCircuitLanguage(const std::string& filePath);
+    void exportToCircuitLanguage(const std::string& filePath);
+    void showCircuitLanguageDialog();
+
+    // Image export
+    void exportToImage(const std::string& filePath, const std::string& format); // "png" or "svg"
+
+    // PDF export
+    void exportToPDF(const std::string& filePath);
+
+    // Enhanced JSON/XML export
+    void exportJSONEnhanced(const std::string& baseName, const std::string& category);
+    void exportXMLEnhanced(const std::string& baseName, const std::string& category);
     ImportResult getLastImportResult() const {
         return lastImportResult_;
     }
@@ -115,6 +130,19 @@ private:
     bool isSaving_ = false;
     bool isLoading_ = false;
     float saveProgress_ = 0.0f;
+    // Circuit Language Parser state
+    CircuitLanguageParser circuitLanguageParser_;
+    bool showCircuitLanguageDialog_ = false;
+    bool showExportImageDialog_ = false;
+    bool showExportPdfDialog_ = false;
+    std::string circuitLanguageBuffer_;
+    std::string exportFilePathBuffer_;
+    std::string exportFormatBuffer_ = "png";
+
+    // Image and PDF exporters
+    ImageExporter imageExporter_;
+    PdfExporter pdfExporter_;
+    PdfExportOptions pdfOptions_;
     float loadProgress_ = 0.0f;
 
     // Help system
@@ -144,7 +172,7 @@ private:
     static constexpr float PaletteViewBottom = 800.0f;
     void updatePalettePositions();
 
-    // Itens de paleta que representam chips (id da definição).
+    // Itens de paleta que representam chips (id da definiÃ§Ã£o).
     std::vector<std::string> chipPaletteIds_;
 
     // Undo/Redo
@@ -198,4 +226,3 @@ private:
     void saveEmergencyBackup();
 };
 
-#endif

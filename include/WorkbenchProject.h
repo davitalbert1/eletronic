@@ -1,6 +1,4 @@
-#ifndef WORKBENCH_PROJECT_HPP
-#define WORKBENCH_PROJECT_HPP
-
+﻿#pragma once
 #include <vector>
 #include <memory>
 #include <fstream>
@@ -12,9 +10,8 @@
 #include <SFML/Graphics.hpp>
 #include "LogicEntities.h"
 #include "Wire.h"
-
 #ifdef _WIN32
-#include <windows.h>
+    #include <windows.h>
 #endif
 
 namespace fs = std::filesystem;
@@ -38,38 +35,38 @@ public:
     WorkbenchProject() = default;
 
     // Project I/O
-    void writeProject(const fs::path& p, 
-                      const std::vector<std::shared_ptr<Gate>>& placedGates,
-                      const std::vector<Wire>& wires,
-                      const std::string& projectName,
-                      const std::string& category,
-                      const std::string& description,
-                      const std::string& tags);
+    void writeProject(const fs::path& p,
+                    const std::vector<std::shared_ptr<Gate>>& placedGates,
+                    const std::vector<Wire>& wires,
+                    const std::string& projectName,
+                    const std::string& category,
+                    const std::string& description,
+                    const std::string& tags);
 
     bool loadProject(const fs::path& p,
-                     std::vector<std::shared_ptr<Gate>>& placedGates,
-                     std::vector<Wire>& wires,
-                     std::string& projectName,
-                     std::string& category,
-                     std::string& description,
-                     std::string& tags,
-                     const sf::Font& font);
+                    std::vector<std::shared_ptr<Gate>>& placedGates,
+                    std::vector<Wire>& wires,
+                    std::string& projectName,
+                    std::string& category,
+                    std::string& description,
+                    std::string& tags,
+                    const sf::Font& font);
 
     // Export
-    void exportJSON(const std::string& baseName, 
+    void exportJSON(const std::string& baseName,
                     const std::string& category,
                     const std::vector<std::shared_ptr<Gate>>& placedGates,
                     const std::vector<Wire>& wires);
 
     void exportXML(const std::string& baseName,
-                   const std::string& category,
-                   const std::vector<std::shared_ptr<Gate>>& placedGates,
-                   const std::vector<Wire>& wires);
+                const std::string& category,
+                const std::vector<std::shared_ptr<Gate>>& placedGates,
+                const std::vector<Wire>& wires);
 
     // Backup
     void createBackup(const std::string& projectName,
-                      const std::vector<std::shared_ptr<Gate>>& placedGates,
-                      const std::vector<Wire>& wires);
+                    const std::vector<std::shared_ptr<Gate>>& placedGates,
+                    const std::vector<Wire>& wires);
 
     // Metadata
     fs::path metaPath(const fs::path& gatePath) const;
@@ -87,5 +84,3 @@ public:
 private:
     std::string fileTimeToString(FILETIME ft) const;
 };
-
-#endif

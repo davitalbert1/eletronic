@@ -1,6 +1,4 @@
-#ifndef WORKBENCH_PERFORMANCE_HPP
-#define WORKBENCH_PERFORMANCE_HPP
-
+﻿#pragma once
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <memory>
@@ -85,5 +83,3 @@ private:
     std::string lastError_;
     bool hasError_ = false;
 };
-
-#endif

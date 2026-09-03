@@ -1,5 +1,4 @@
-#ifndef CHIP_CHIPFACTORY_H
-#define CHIP_CHIPFACTORY_H
+﻿#pragma once
 #include <string>
 #include <memory>
 #include <vector>
@@ -41,5 +40,3 @@ namespace chip {
                         const sf::Font& font);
 
 }
-
-#endif

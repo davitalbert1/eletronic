@@ -1002,7 +1002,7 @@ const char* ImGui_ImplWGPU_GetLogLevelName(WGPULogLevel level)
 {
     switch (level)
     {
-    case WGPULogLevel_Error: return "Error"; 
+    case WGPULogLevel_Error: return "Error";
     case WGPULogLevel_Warn: return "Warn";
     case WGPULogLevel_Info: return "Info";
     case WGPULogLevel_Debug: return "Debug";

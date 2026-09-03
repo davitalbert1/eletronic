@@ -1,6 +1,4 @@
-#ifndef CHIP_JSON_H
-#define CHIP_JSON_H
-
+﻿#pragma once
 #include <string>
 #include <vector>
 #include <map>
@@ -89,5 +87,3 @@ namespace chip {
     JsonValue jsonParse(const std::string& text);
 
 }
-
-#endif

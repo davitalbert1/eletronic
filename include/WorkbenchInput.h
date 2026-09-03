@@ -1,6 +1,4 @@
-#ifndef WORKBENCH_INPUT_HPP
-#define WORKBENCH_INPUT_HPP
-
+﻿#pragma once
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <string>
@@ -75,33 +73,33 @@ public:
                         const sf::FloatRect& dropdownBounds);
 
     void handleMousePress(const sf::Event::MouseButtonPressed& event,
-                          const sf::Vector2f& mousePos,
-                          const std::vector<std::shared_ptr<Gate>>& paletteItems,
-                          std::vector<std::shared_ptr<Gate>>& placedGates,
-                          std::vector<Wire>& wires,
-                          const sf::FloatRect& menuButtonBounds,
-                          const sf::FloatRect& newTextBounds,
-                          const sf::FloatRect& saveTextBounds,
-                          const sf::FloatRect& loadTextBounds,
-                          const sf::FloatRect& saveAsTextBounds,
-                          bool& showDropdown,
-                          bool& isSaveModal,
-                          bool& isLoadModal,
-                          std::string& inputBuffer,
-                          std::string& categoryBuffer,
-                          std::string& descriptionBuffer,
-                          std::string& tagsBuffer,
-                          std::string& currentProjectName,
-                          std::string& currentCategory,
-                          std::string& currentDescription,
-                          std::string& currentTags,
-                          std::vector<std::string>& categories,
-                          int& loadCategorySel,
-                          std::vector<WorkbenchProject::ProjectInfo>& projectInfos,
-                          size_t& selectedProjectIndex,
-                          int& listScroll,
-                          std::string& searchBuffer,
-                          const sf::Font& font);
+                        const sf::Vector2f& mousePos,
+                        const std::vector<std::shared_ptr<Gate>>& paletteItems,
+                        std::vector<std::shared_ptr<Gate>>& placedGates,
+                        std::vector<Wire>& wires,
+                        const sf::FloatRect& menuButtonBounds,
+                        const sf::FloatRect& newTextBounds,
+                        const sf::FloatRect& saveTextBounds,
+                        const sf::FloatRect& loadTextBounds,
+                        const sf::FloatRect& saveAsTextBounds,
+                        bool& showDropdown,
+                        bool& isSaveModal,
+                        bool& isLoadModal,
+                        std::string& inputBuffer,
+                        std::string& categoryBuffer,
+                        std::string& descriptionBuffer,
+                        std::string& tagsBuffer,
+                        std::string& currentProjectName,
+                        std::string& currentCategory,
+                        std::string& currentDescription,
+                        std::string& currentTags,
+                        std::vector<std::string>& categories,
+                        int& loadCategorySel,
+                        std::vector<WorkbenchProject::ProjectInfo>& projectInfos,
+                        size_t& selectedProjectIndex,
+                        int& listScroll,
+                        std::string& searchBuffer,
+                        const sf::Font& font);
 
     void handleMouseRelease(const sf::Event::MouseButtonReleased& event,
                             const sf::Vector2f& mousePos,
@@ -139,17 +137,17 @@ public:
                         const sf::Font& font);
 
     void handleTextEntered(const sf::Event::TextEntered& event,
-                           bool isSaveModal,
-                           bool isLoadModal,
-                           std::string& inputBuffer,
-                           std::string& categoryBuffer,
-                           std::string& descriptionBuffer,
-                           std::string& tagsBuffer,
-                           std::string& searchBuffer);
+                        bool isSaveModal,
+                        bool isLoadModal,
+                        std::string& inputBuffer,
+                        std::string& categoryBuffer,
+                        std::string& descriptionBuffer,
+                        std::string& tagsBuffer,
+                        std::string& searchBuffer);
 
     void handleMouseWheel(const sf::Event::MouseWheelScrolled& event,
-                          std::vector<WorkbenchProject::ProjectInfo>& projectInfos,
-                          int& listScroll);
+                        std::vector<WorkbenchProject::ProjectInfo>& projectInfos,
+                        int& listScroll);
 
     // Utility functions
     sf::Vector2f snapToGrid(sf::Vector2f pos, bool enable) const;
@@ -166,5 +164,3 @@ public:
 private:
     InputState state;
 };
-
-#endif

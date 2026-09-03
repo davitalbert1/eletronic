@@ -1,5 +1,4 @@
-#ifndef LOGIC_ENTITIES_HPP
-#define LOGIC_ENTITIES_HPP
+﻿#pragma once
 #include "Gate.h"
 #include <array>
 #include <cstdint>
@@ -203,7 +202,7 @@ public:
     }
 };
 
-// Memória ROM: 4 entradas de endereço (A0-A3) e 4 saídas de dados (D0-D3)
+// MemÃ³ria ROM: 4 entradas de endereÃ§o (A0-A3) e 4 saÃ­das de dados (D0-D3)
 class ROM : public Gate {
 public:
     ROM(sf::Vector2f pos, const sf::Font& font) : Gate(GateType::ROM, pos, font) {
@@ -252,7 +251,7 @@ private:
     }};
 };
 
-// Display de 7 segmentos: 4 entradas (D0-D3) decodificam dígito 0-15
+// Display de 7 segmentos: 4 entradas (D0-D3) decodificam dÃ­gito 0-15
 class Seg7Display : public Gate {
 public:
     Seg7Display(sf::Vector2f pos, const sf::Font& font) : Gate(GateType::SEG7, pos, font) {
@@ -267,8 +266,8 @@ public:
         for (int i = 0; i < 4; ++i) if (inputs[i].state) v |= (1 << i);
         seg = SEG_MAP[v & 0xF];
     }
-    void draw(sf::RenderWindow& window) override {
-        drawBase(window);
+    void draw(sf::RenderTarget& target) override {
+        drawBase(target);
         const float x = position.x + 25, y = position.y + 70, w = 50, h = 12, g = 4;
         auto segRect = [&](float sx, float sy, float sw, float sh) {
             sf::RectangleShape r(sf::Vector2f(sw, sh));
@@ -277,13 +276,13 @@ public:
             return r;
         };
 
-        if (seg & 1) window.draw(segRect(x + w/2 - h/2, y, w, h)); // a (top)
-        if (seg & 2) window.draw(segRect(x + w - h, y + h/2 + g/2, h, h)); // b (top-right)
-        if (seg & 4) window.draw(segRect(x + w - h, y + h + g + h/2 + g/2, h, h)); // c (bottom-right)
-        if (seg & 8) window.draw(segRect(x + w/2 - h/2, y + 2*h + 2*g, w, h)); // d (bottom)
-        if (seg & 16) window.draw(segRect(x, y + h + g + h/2 + g/2, h, h)); // e (bottom-left)
-        if (seg & 32) window.draw(segRect(x, y + h/2 + g/2, h, h)); // f (top-left)
-        if (seg & 64) window.draw(segRect(x + w/2 - h/2, y + h + g, w, h)); // g (middle)
+        if (seg & 1) target.draw(segRect(x + w/2 - h/2, y, w, h)); // a (top)
+        if (seg & 2) target.draw(segRect(x + w - h, y + h/2 + g/2, h, h)); // b (top-right)
+        if (seg & 4) target.draw(segRect(x + w - h, y + h + g + h/2 + g/2, h, h)); // c (bottom-right)
+        if (seg & 8) target.draw(segRect(x + w/2 - h/2, y + 2*h + 2*g, w, h)); // d (bottom)
+        if (seg & 16) target.draw(segRect(x, y + h + g + h/2 + g/2, h, h)); // e (bottom-left)
+        if (seg & 32) target.draw(segRect(x, y + h/2 + g/2, h, h)); // f (top-left)
+        if (seg & 64) target.draw(segRect(x + w/2 - h/2, y + h + g, w, h)); // g (middle)
     }
     std::shared_ptr<Gate> clone(const sf::Font& font) const override {
         return std::make_shared<Seg7Display>(getPosition(), font);
@@ -313,18 +312,18 @@ public:
         for (int i = 0; i < 8; ++i) if (inputs[i].state) v |= (1 << i);
         value = v;
     }
-    void draw(sf::RenderWindow& window) override {
-        drawBase(window);
+    void draw(sf::RenderTarget& target) override {
+        drawBase(target);
         sf::RectangleShape screen(sf::Vector2f(Config::GateWidth - 20, 50));
         screen.setPosition({position.x + 10, position.y + 90});
         screen.setFillColor(sf::Color(10, 20, 10));
         screen.setOutlineThickness(2);
         screen.setOutlineColor(Theme::GateOutline);
-        window.draw(screen);
+        target.draw(screen);
         char c = (value >= 32 && value < 127) ? (char)value : '?';
         charText_.setString(std::string(1, c));
         charText_.setPosition({position.x + Config::GateWidth/2 - 12, position.y + 92});
-        window.draw(charText_);
+        target.draw(charText_);
     }
     std::shared_ptr<Gate> clone(const sf::Font& font) const override {
         return std::make_shared<LCDDisplay>(getPosition(), font);
@@ -345,14 +344,14 @@ public:
     void updateLogic() override {
         lit = inputs[0].state;
     }
-    void draw(sf::RenderWindow& window) override {
-        drawBase(window);
+    void draw(sf::RenderTarget& target) override {
+        drawBase(target);
         sf::CircleShape bulb(18);
         bulb.setPosition({position.x + Config::GateWidth/2 - 18, position.y + 45});
         bulb.setFillColor(lit ? Theme::SignalOn : sf::Color(60, 60, 70));
         bulb.setOutlineThickness(3);
         bulb.setOutlineColor(Theme::GateOutline);
-        window.draw(bulb);
+        target.draw(bulb);
     }
     std::shared_ptr<Gate> clone(const sf::Font& font) const override {
         return std::make_shared<LED>(getPosition(), font);
@@ -361,7 +360,7 @@ private:
     bool lit = false;
 };
 
-// Chave (switch): 1 saída, clique alterna
+// Chave (switch): 1 saÃ­da, clique alterna
 class Switch : public Gate {
 public:
     Switch(sf::Vector2f pos, const sf::Font& font) : Gate(GateType::SWITCH, pos, font) {
@@ -375,7 +374,9 @@ public:
         label.setFillColor(on ? Theme::SignalOn : Theme::Text);
         updateLabelPos();
     }
-    void updateLogic() override { outputs[0].state = on; }
+    void updateLogic() override {
+        outputs[0].state = on;
+    }
     float getExtraData() const override {
         return on ? 1.0f : 0.0f;
     }
@@ -394,7 +395,7 @@ private:
     bool on = false;
 };
 
-// Botão (pulsar): 1 saída, clique gera pulso
+// BotÃ£o (pulsar): 1 saÃ­da, clique gera pulso
 class Button : public Gate {
 public:
     Button(sf::Vector2f pos, const sf::Font& font) : Gate(GateType::BUTTON, pos, font) {
@@ -402,7 +403,9 @@ public:
         outputs.emplace_back(PinType::OUTPUT, sf::Vector2f(Config::GateWidth, 35), this);
         setPosition(pos);
     }
-    void interact() override { pulse = 12; }
+    void interact() override {
+        pulse = 12;
+    }
     void updateLogic() override {
         outputs[0].state = pulse > 0;
         if (pulse > 0) --pulse;
@@ -414,14 +417,14 @@ private:
     int pulse = 0;
 };
 
-// Contador: clk (0), rst (1) -> 4 saídas (Q0-Q3)
+// Contador: clk (0), rst (1) -> 4 saÃ­das (Q0-Q3)
 class Counter : public Gate {
 public:
     Counter(sf::Vector2f pos, const sf::Font& font) : Gate(GateType::COUNTER, pos, font) {
         body.setSize({Config::GateWidth, 160.0f});
         label.setString("COUNTER");
-        inputs.emplace_back(PinType::INPUT, sf::Vector2f(0, 20), this);   // clk
-        inputs.emplace_back(PinType::INPUT, sf::Vector2f(0, 50), this);   // rst
+        inputs.emplace_back(PinType::INPUT, sf::Vector2f(0, 20), this); // clk
+        inputs.emplace_back(PinType::INPUT, sf::Vector2f(0, 50), this); // rst
         for (int i = 0; i < 4; ++i)
             outputs.emplace_back(PinType::OUTPUT, sf::Vector2f(Config::GateWidth, 20 + i * 30), this);
         setPosition(pos);
@@ -449,13 +452,13 @@ private:
     bool prevClk = false;
 };
 
-// Registrador: clk (0) + 4 dados (D0-D3) -> 4 saídas (Q0-Q3)
+// Registrador: clk (0) + 4 dados (D0-D3) -> 4 saÃ­das (Q0-Q3)
 class Register : public Gate {
 public:
     Register(sf::Vector2f pos, const sf::Font& font) : Gate(GateType::REGISTER, pos, font) {
         body.setSize({Config::GateWidth, 160.0f});
         label.setString("REG");
-        inputs.emplace_back(PinType::INPUT, sf::Vector2f(0, 20), this);   // clk
+        inputs.emplace_back(PinType::INPUT, sf::Vector2f(0, 20), this); // clk
         for (int i = 0; i < 4; ++i)
             inputs.emplace_back(PinType::INPUT, sf::Vector2f(0, 50 + i * 24), this); // D0-D3
         for (int i = 0; i < 4; ++i)
@@ -499,8 +502,8 @@ public:
         setPosition(pos);
     }
     void updateLogic() override {
-        // O sinal já foi escrito em outputs[0].state pelo CustomChip antes
-        // da simulação interna; aqui apenas propagamos (sem alteração).
+        // O sinal jÃ¡ foi escrito em outputs[0].state pelo CustomChip antes
+        // da simulaÃ§Ã£o interna; aqui apenas propagamos (sem alteraÃ§Ã£o).
     }
     std::string getPinName() const override {
         return pinName_;
@@ -517,7 +520,7 @@ private:
     std::string pinName_;
 };
 
-// Pino de SAÍDA: marca um pino externo do chip.
+// Pino de SAÃDA: marca um pino externo do chip.
 class OutputPin : public Gate {
 public:
     OutputPin(sf::Vector2f pos, const sf::Font& font, const std::string& name = "OUT")
@@ -527,7 +530,7 @@ public:
         setPosition(pos);
     }
     void updateLogic() override {
-        // O valor de entrada é lido pelo CustomChip após a simulação interna.
+        // O valor de entrada Ã© lido pelo CustomChip apÃ³s a simulaÃ§Ã£o interna.
     }
     std::string getPinName() const override {
         return pinName_;
@@ -546,10 +549,10 @@ private:
 
 class CustomChip : public Gate {
 public:
-    // Constrói a instância a partir de uma definição.
+    // ConstrÃ³i a instÃ¢ncia a partir de uma definiÃ§Ã£o.
     CustomChip(sf::Vector2f pos, const sf::Font& font, const std::shared_ptr<chip::ChipDefinition>& def);
 
-    void updateLogic() override; // alimenta internos, simula, lê saídas
+    void updateLogic() override; // alimenta internos, simula, lÃª saÃ­das
     void interact() override; // clica propaga para o circuito interno
     std::shared_ptr<Gate> clone(const sf::Font& font) const override;
 
@@ -557,23 +560,21 @@ public:
         return chipId_;
     }
 
-    // Acesso à definição (para edição/atualização).
+    // Acesso Ã  definiÃ§Ã£o (para ediÃ§Ã£o/atualizaÃ§Ã£o).
     std::shared_ptr<chip::ChipDefinition> getDefinition() const {
         return definition_;
     }
 
-    // Recalcula entradas/saídas externas a partir da definição (usado após
+    // Recalcula entradas/saÃ­das externas a partir da definiÃ§Ã£o (usado apÃ³s
     // atualizar o chip). Recria o circuito interno.
     void rebuild(const sf::Font& font);
 
 private:
     std::shared_ptr<chip::ChipDefinition> definition_;
-    std::shared_ptr<chip::Circuit> internal_; // cópia independente do circuito
+    std::shared_ptr<chip::Circuit> internal_; // cÃ³pia independente do circuito
     std::string chipId_;
 
-    // Mapeia índice de pino externo -> InputPin/OutputPin interno.
+    // Mapeia Ã­ndice de pino externo -> InputPin/OutputPin interno.
     std::vector<InputPin*> inputPins_; // [i] = pino interno da entrada i
-    std::vector<OutputPin*> outputPins_; // [i] = pino interno da saída i
+    std::vector<OutputPin*> outputPins_; // [i] = pino interno da saÃ­da i
 };
-
-#endif

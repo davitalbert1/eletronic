@@ -1,5 +1,4 @@
-#ifndef CHIP_CHIPLIBRARY_H
-#define CHIP_CHIPLIBRARY_H
+﻿#pragma once
 #include <string>
 #include <vector>
 #include <memory>
@@ -9,7 +8,7 @@
 namespace chip {
     class ChipLibrary {
     public:
-        // Singleton simples para acesso global a partir do Workbench e da fábrica.
+        // Singleton simples para acesso global a partir do Workbench e da fÃ¡brica.
         static ChipLibrary& instance();
         bool registerChip(const ChipDefinition::Ptr& def);
         void unregister(const std::string& id);
@@ -26,10 +25,8 @@ namespace chip {
         ChipLibrary() = default;
         std::unordered_map<std::string, ChipDefinition::Ptr> defs_;
 
-        // DFS para detectar se 'from' alcança 'to' seguindo dependencies.
+        // DFS para detectar se 'from' alcanÃ§a 'to' seguindo dependencies.
         bool reaches(const std::string& from, const std::string& to,
                     std::set<std::string>& visited) const;
     };
 }
-
-#endif

@@ -3,7 +3,7 @@
 #include "WorkbenchUI.h"
 #include <algorithm>
 
-void WorkbenchInput::handleMouseMove(const sf::Event::MouseMoved& event, 
+void WorkbenchInput::handleMouseMove(const sf::Event::MouseMoved& event,
                                      const sf::Vector2f& mousePos,
                                      const std::vector<std::shared_ptr<Gate>>& placedGates,
                                      const std::vector<Wire>& wires,
@@ -19,7 +19,7 @@ void WorkbenchInput::handleMouseMove(const sf::Event::MouseMoved& event,
     state.isLoadHovered = loadTextBounds.contains(mousePos);
     state.isSaveAsHovered = saveAsTextBounds.contains(mousePos);
 
-    state.showDropdown = menuButtonBounds.contains(mousePos) || 
+    state.showDropdown = menuButtonBounds.contains(mousePos) ||
                         (state.showDropdown && dropdownBounds.contains(mousePos));
 
     if (state.isSelecting) {
@@ -482,7 +482,7 @@ void WorkbenchInput::handleKeyPress(const sf::Event::KeyPressed& event,
         }
     } else if (event.code == sf::Keyboard::Key::G && !event.control) {
         enableSnapToGrid = !enableSnapToGrid;
-    } else if (event.code == sf::Keyboard::Key::Left || 
+    } else if (event.code == sf::Keyboard::Key::Left ||
                event.code == sf::Keyboard::Key::Right ||
                event.code == sf::Keyboard::Key::Up ||
                event.code == sf::Keyboard::Key::Down) {

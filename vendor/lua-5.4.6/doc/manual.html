@@ -1322,8 +1322,8 @@ enclosed by <em>long brackets</em>.
 We define an <em>opening long bracket of level <em>n</em></em> as an opening
 square bracket followed by <em>n</em> equal signs followed by another
 opening square bracket.
-So, an opening long bracket of level&nbsp;0 is written as <code>[[</code>, 
-an opening long bracket of level&nbsp;1 is written as <code>[=[</code>, 
+So, an opening long bracket of level&nbsp;0 is written as <code>[[</code>,
+an opening long bracket of level&nbsp;1 is written as <code>[=[</code>,
 and so on.
 A <em>closing long bracket</em> is defined similarly;
 for instance,
@@ -10346,7 +10346,7 @@ Converts the angle <code>x</code> from degrees to radians.
 <p>
 When called without arguments,
 returns a pseudo-random float with uniform distribution
-in the range  <em>[0,1)</em>.  
+in the range  <em>[0,1)</em>.
 When called with two integers <code>m</code> and <code>n</code>,
 <code>math.random</code> returns a pseudo-random integer
 with uniform distribution in the range <em>[m, n]</em>.
@@ -11323,7 +11323,7 @@ and raises an error when called with a level out of range.
 
 
 <p>
-Variable names starting with '<code>(</code>' (open parenthesis) 
+Variable names starting with '<code>(</code>' (open parenthesis)
 represent variables with no known names
 (internal variables such as loop control variables,
 and variables from chunks saved without debug information).
@@ -11960,21 +11960,21 @@ and LiteralString, see <a href="#3.1">&sect;3.1</a>.)
 
 	block ::= {stat} [retstat]
 
-	stat ::=  &lsquo;<b>;</b>&rsquo; | 
-		 varlist &lsquo;<b>=</b>&rsquo; explist | 
-		 functioncall | 
-		 label | 
-		 <b>break</b> | 
-		 <b>goto</b> Name | 
-		 <b>do</b> block <b>end</b> | 
-		 <b>while</b> exp <b>do</b> block <b>end</b> | 
-		 <b>repeat</b> block <b>until</b> exp | 
-		 <b>if</b> exp <b>then</b> block {<b>elseif</b> exp <b>then</b> block} [<b>else</b> block] <b>end</b> | 
-		 <b>for</b> Name &lsquo;<b>=</b>&rsquo; exp &lsquo;<b>,</b>&rsquo; exp [&lsquo;<b>,</b>&rsquo; exp] <b>do</b> block <b>end</b> | 
-		 <b>for</b> namelist <b>in</b> explist <b>do</b> block <b>end</b> | 
-		 <b>function</b> funcname funcbody | 
-		 <b>local</b> <b>function</b> Name funcbody | 
-		 <b>local</b> attnamelist [&lsquo;<b>=</b>&rsquo; explist] 
+	stat ::=  &lsquo;<b>;</b>&rsquo; |
+		 varlist &lsquo;<b>=</b>&rsquo; explist |
+		 functioncall |
+		 label |
+		 <b>break</b> |
+		 <b>goto</b> Name |
+		 <b>do</b> block <b>end</b> |
+		 <b>while</b> exp <b>do</b> block <b>end</b> |
+		 <b>repeat</b> block <b>until</b> exp |
+		 <b>if</b> exp <b>then</b> block {<b>elseif</b> exp <b>then</b> block} [<b>else</b> block] <b>end</b> |
+		 <b>for</b> Name &lsquo;<b>=</b>&rsquo; exp &lsquo;<b>,</b>&rsquo; exp [&lsquo;<b>,</b>&rsquo; exp] <b>do</b> block <b>end</b> |
+		 <b>for</b> namelist <b>in</b> explist <b>do</b> block <b>end</b> |
+		 <b>function</b> funcname funcbody |
+		 <b>local</b> <b>function</b> Name funcbody |
+		 <b>local</b> attnamelist [&lsquo;<b>=</b>&rsquo; explist]
 
 	attnamelist ::=  Name attrib {&lsquo;<b>,</b>&rsquo; Name attrib}
 
@@ -11988,20 +11988,20 @@ and LiteralString, see <a href="#3.1">&sect;3.1</a>.)
 
 	varlist ::= var {&lsquo;<b>,</b>&rsquo; var}
 
-	var ::=  Name | prefixexp &lsquo;<b>[</b>&rsquo; exp &lsquo;<b>]</b>&rsquo; | prefixexp &lsquo;<b>.</b>&rsquo; Name 
+	var ::=  Name | prefixexp &lsquo;<b>[</b>&rsquo; exp &lsquo;<b>]</b>&rsquo; | prefixexp &lsquo;<b>.</b>&rsquo; Name
 
 	namelist ::= Name {&lsquo;<b>,</b>&rsquo; Name}
 
 	explist ::= exp {&lsquo;<b>,</b>&rsquo; exp}
 
-	exp ::=  <b>nil</b> | <b>false</b> | <b>true</b> | Numeral | LiteralString | &lsquo;<b>...</b>&rsquo; | functiondef | 
-		 prefixexp | tableconstructor | exp binop exp | unop exp 
+	exp ::=  <b>nil</b> | <b>false</b> | <b>true</b> | Numeral | LiteralString | &lsquo;<b>...</b>&rsquo; | functiondef |
+		 prefixexp | tableconstructor | exp binop exp | unop exp
 
 	prefixexp ::= var | functioncall | &lsquo;<b>(</b>&rsquo; exp &lsquo;<b>)</b>&rsquo;
 
-	functioncall ::=  prefixexp args | prefixexp &lsquo;<b>:</b>&rsquo; Name args 
+	functioncall ::=  prefixexp args | prefixexp &lsquo;<b>:</b>&rsquo; Name args
 
-	args ::=  &lsquo;<b>(</b>&rsquo; [explist] &lsquo;<b>)</b>&rsquo; | tableconstructor | LiteralString 
+	args ::=  &lsquo;<b>(</b>&rsquo; [explist] &lsquo;<b>)</b>&rsquo; | tableconstructor | LiteralString
 
 	functiondef ::= <b>function</b> funcbody
 
@@ -12017,9 +12017,9 @@ and LiteralString, see <a href="#3.1">&sect;3.1</a>.)
 
 	fieldsep ::= &lsquo;<b>,</b>&rsquo; | &lsquo;<b>;</b>&rsquo;
 
-	binop ::=  &lsquo;<b>+</b>&rsquo; | &lsquo;<b>-</b>&rsquo; | &lsquo;<b>*</b>&rsquo; | &lsquo;<b>/</b>&rsquo; | &lsquo;<b>//</b>&rsquo; | &lsquo;<b>^</b>&rsquo; | &lsquo;<b>%</b>&rsquo; | 
-		 &lsquo;<b>&amp;</b>&rsquo; | &lsquo;<b>~</b>&rsquo; | &lsquo;<b>|</b>&rsquo; | &lsquo;<b>&gt;&gt;</b>&rsquo; | &lsquo;<b>&lt;&lt;</b>&rsquo; | &lsquo;<b>..</b>&rsquo; | 
-		 &lsquo;<b>&lt;</b>&rsquo; | &lsquo;<b>&lt;=</b>&rsquo; | &lsquo;<b>&gt;</b>&rsquo; | &lsquo;<b>&gt;=</b>&rsquo; | &lsquo;<b>==</b>&rsquo; | &lsquo;<b>~=</b>&rsquo; | 
+	binop ::=  &lsquo;<b>+</b>&rsquo; | &lsquo;<b>-</b>&rsquo; | &lsquo;<b>*</b>&rsquo; | &lsquo;<b>/</b>&rsquo; | &lsquo;<b>//</b>&rsquo; | &lsquo;<b>^</b>&rsquo; | &lsquo;<b>%</b>&rsquo; |
+		 &lsquo;<b>&amp;</b>&rsquo; | &lsquo;<b>~</b>&rsquo; | &lsquo;<b>|</b>&rsquo; | &lsquo;<b>&gt;&gt;</b>&rsquo; | &lsquo;<b>&lt;&lt;</b>&rsquo; | &lsquo;<b>..</b>&rsquo; |
+		 &lsquo;<b>&lt;</b>&rsquo; | &lsquo;<b>&lt;=</b>&rsquo; | &lsquo;<b>&gt;</b>&rsquo; | &lsquo;<b>&gt;=</b>&rsquo; | &lsquo;<b>==</b>&rsquo; | &lsquo;<b>~=</b>&rsquo; |
 		 <b>and</b> | <b>or</b>
 
 	unop ::= &lsquo;<b>-</b>&rsquo; | <b>not</b> | &lsquo;<b>#</b>&rsquo; | &lsquo;<b>~</b>&rsquo;

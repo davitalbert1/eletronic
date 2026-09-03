@@ -109,7 +109,7 @@ Reading the changelogs is a good way to keep up to date with the things Dear ImG
 
 ### Demo
 
-Calling the `ImGui::ShowDemoWindow()` function will create a demo window showcasing a variety of features and examples. The code is always available for reference in `imgui_demo.cpp`. 
+Calling the `ImGui::ShowDemoWindow()` function will create a demo window showcasing a variety of features and examples. The code is always available for reference in `imgui_demo.cpp`.
 - [imgui_explorer](https://pthom.github.io/imgui_explorer): Web version of the demo w/ source code browser, courtesy of [@pthom](https://github.com/pthom).
 
 You should be able to build the examples from sources. If you don't, let us know! If you want to have a quick look at some Dear ImGui features, you can download Windows binaries of the demo app here:
@@ -152,7 +152,7 @@ Officially maintained backends (in repository):
 
 [Useful Extensions/Widgets](https://github.com/ocornut/imgui/wiki/Useful-Extensions) wiki page:
 
-[![Useful extensions thumbnails](https://github.com/user-attachments/assets/e6b0aa7c-bf53-41c5-ac69-bea3098b1dee)](https://github.com/ocornut/imgui/wiki/Useful-Extensions) 
+[![Useful extensions thumbnails](https://github.com/user-attachments/assets/e6b0aa7c-bf53-41c5-ac69-bea3098b1dee)](https://github.com/ocornut/imgui/wiki/Useful-Extensions)
 - Automation/testing, Text editors, node editors, timeline editors, plotting, software renderers, remote network access, memory editors, gizmos, etc. Notable and well supported extensions include [ImPlot](https://github.com/epezent/implot), [ImPlot3d](https://github.com/brenocq/implot3d) and [Dear ImGui Test Engine](https://github.com/ocornut/imgui_test_engine).
 
 Also see [Wiki](https://github.com/ocornut/imgui/wiki) for more links and ideas.

@@ -1,12 +1,10 @@
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
-
+﻿#pragma once
 #include <SFML/Graphics.hpp>
 
 // Theme enumeration
 enum class ThemeType {
-    DARK,        // Default dark theme
-    LIGHT,       // Light alternative theme
+    DARK, // Default dark theme
+    LIGHT, // Light alternative theme
     HIGH_CONTRAST // High contrast theme for accessibility
 };
 
@@ -25,7 +23,7 @@ namespace Theme {
     const sf::Color Panel = sf::Color(45, 45, 65);
     const sf::Color TopMenu = sf::Color(55, 55, 80);
     const sf::Color Accent = sf::Color(0, 160, 255);
-    const sf::Color Text = sf::Color(255, 255, 255);  // Pure white for maximum contrast
+    const sf::Color Text = sf::Color(255, 255, 255); // Pure white for maximum contrast
 
     // Cartoon-style gate colors - absolute and vibrant
     const sf::Color GateBody = sf::Color(100, 105, 120);
@@ -71,7 +69,7 @@ namespace Theme {
         const sf::Color Panel = sf::Color(255, 255, 255);
         const sf::Color TopMenu = sf::Color(220, 220, 230);
         const sf::Color Accent = sf::Color(0, 120, 215);
-        const sf::Color Text = sf::Color(30, 30, 30);  // Near black for contrast
+        const sf::Color Text = sf::Color(30, 30, 30); // Near black for contrast
 
         const sf::Color GateBody = sf::Color(200, 205, 215);
         const sf::Color GateOutline = sf::Color(80, 80, 90);
@@ -197,7 +195,7 @@ constexpr bool EnableLOD = true;
 
     // Visual pattern types for colorblind accessibility
     enum class PatternType {
-        NONE,  // No pattern (default)
+        NONE, // No pattern (default)
         STRIPES, // Diagonal stripes
         DOTS, // Dots pattern
         GRID, // Grid pattern
@@ -332,5 +330,3 @@ namespace Accessibility {
         }
     }
 }
-
-#endif

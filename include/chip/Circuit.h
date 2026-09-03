@@ -1,5 +1,4 @@
-#ifndef CHIP_CIRCUIT_H
-#define CHIP_CIRCUIT_H
+﻿#pragma once
 #include <vector>
 #include <memory>
 #include <string>
@@ -24,5 +23,3 @@ namespace chip {
         std::vector<Gate*> findGatesOfType(GateType t);
     };
 }
-
-#endif

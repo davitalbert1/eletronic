@@ -104,7 +104,7 @@ void ConfirmationDialog::render(sf::RenderWindow& window, const sf::Font& font) 
     yesText.setCharacterSize(14);
     yesText.setFillColor(sf::Color::White);
     sf::FloatRect yesBounds = yesText.getLocalBounds();
-    yesText.setPosition({YesButtonX + (ButtonWidth - yesBounds.size.x) / 2, 
+    yesText.setPosition({YesButtonX + (ButtonWidth - yesBounds.size.x) / 2,
                          ButtonY + 8});
     window.draw(yesText);
 

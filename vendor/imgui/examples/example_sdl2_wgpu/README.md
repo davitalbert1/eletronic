@@ -1,4 +1,4 @@
-## How to Build     
+## How to Build
 
 
 ---
@@ -31,7 +31,7 @@ The resulting binary will be found at one of the following locations:
 #### Sync Emscripten with latest Google Dawn:
 If you want to sync Emscripten with latest DAWN release it's necessary to download the `port-emdawnwgpu-package` (released daily by Google) here:
 https://github.com/google/dawn/releases
-Unpack it in your preferred folder and to replace the step 3 with: 
+Unpack it in your preferred folder and to replace the step 3 with:
 
 3. `emcmake cmake -DIMGUI_EMSCRIPTEN_WEBGPU_FLAG="--use-port=path/to/emdawnwebgpu_package/emdawnwebgpu.port.py" -G Ninja -B build`
 
@@ -46,28 +46,28 @@ For the WASM code produced by Emscripten to work correctly, it will also be nece
 #### Generate Dawn Native:
 
 - `cmake -G Ninja -DIMGUI_DAWN_DIR=path_to_sdk_dir -B where_to_build_dir`
-   - Using `IMGUI_DAWN_DIR` set `IMGUI_IMPL_WEBGPU_BACKEND_DAWN` compiler define 
+   - Using `IMGUI_DAWN_DIR` set `IMGUI_IMPL_WEBGPU_BACKEND_DAWN` compiler define
 
 #### Generate WGPU Native:
 
 - `cmake -G Ninja -DIMGUI_WGPU_DIR=path_to_sdk_dir -B where_to_build_dir`
 
-   - Using `IMGUI_WGPU_DIR` set `IMGUI_IMPL_WEBGPU_BACKEND_WGPU` compiler define 
+   - Using `IMGUI_WGPU_DIR` set `IMGUI_IMPL_WEBGPU_BACKEND_WGPU` compiler define
 
 #### Generate Emscripten:
 
 - `emcmake cmake -G Ninja -B where_to_build_dir`\
 CMake checks the EMSCRIPEN version then:
-   - if EMS >= 4.0.10 uses `--use-port=emdawnwebgpu` flag to build  
-      - it set `IMGUI_IMPL_WEBGPU_BACKEND_DAWN` compiler define 
+   - if EMS >= 4.0.10 uses `--use-port=emdawnwebgpu` flag to build
+      - it set `IMGUI_IMPL_WEBGPU_BACKEND_DAWN` compiler define
    - if EMS < 4.0.10 the build aborts (`-sUSE_WEBGPU=1` is no longer supported by our examples and our WGPU backend)
 
 #### Generate Emscripten using external WebGPU library (emdawnwebgpu_pkg)
 
 - `emcmake cmake -G Ninja -DIMGUI_EMSCRIPTEN_WEBGPU_FLAG="--use-port=path_to_emdawnwebgpu_pkg" -B where_to_build_dir`
-   - it set `IMGUI_IMPL_WEBGPU_BACKEND_DAWN` compiler define 
+   - it set `IMGUI_IMPL_WEBGPU_BACKEND_DAWN` compiler define
    - *To use external WebGPU library it's necessary to have EMS >= 4.0.10 or the minimum requirements specified by the package:*
-      - https://github.com/google/dawn/releases 
+      - https://github.com/google/dawn/releases
 
 #### Build time
 
@@ -79,8 +79,8 @@ Once the procedure for the specific builder is generated, the build command is *
 
 - Build explicitly:
    - `cd where_to_build_dir`
-   - `ninja` 
-      - This is the builder chosen during the generation phase  
+   - `ninja`
+      - This is the builder chosen during the generation phase
 
 ---
 
@@ -88,7 +88,7 @@ Once the procedure for the specific builder is generated, the build command is *
 #### Generator types (alternative to **ninja** builder):
 - `-G Ninja` to build with __ninja__ builder
 - `-G "Unix Makefiles"` to build with __make__ builder
-- `-G "Visual Studio 17 2022" -A x64` to create a VS 2022 solution (.sln) file, Windows only 
+- `-G "Visual Studio 17 2022" -A x64` to create a VS 2022 solution (.sln) file, Windows only
    - **Native build only**
    - Not **officially** supported to build Google Dawn
 
@@ -112,18 +112,18 @@ It is possible to use a different build type using:
 
 Example:
 - building **Release**:
-   - `cmake -G ninja -DIMGUI_WGPU_DIR=path_to_sdk_dir -DCMAKE_BUILD_TYPE=Release -B where_to_build_dir ` 
+   - `cmake -G ninja -DIMGUI_WGPU_DIR=path_to_sdk_dir -DCMAKE_BUILD_TYPE=Release -B where_to_build_dir `
 
 #### GLFW / SDL2 / SDL3 includes, libraries, search paths and package manager
 
 Includes and libraries, by default, are searched in system/compiler paths (environment variables): you can add the path to your development tools to the environment variables without having to modify the `CMakeLists.txt` file.
-- e.g. CLang search in path specified from the following environment variables: 
+- e.g. CLang search in path specified from the following environment variables:
     - include files: CPATH, C_INCLUDE_PATH, CPLUS_INCLUDE_PATH
     - library files: LIBRARY_PATH
 
 If you are using a package manager (**vcpkg** / **conan** / ... ) you need/can to specify it, adding to cmake command:
 - `-DCMAKE_TOOLCHAIN_FILE=path/to/package_manager.cmake`
-          
+
 Examples:
 
 - using **vcpkg** package manager it's necessary adding:
@@ -135,7 +135,7 @@ Examples:
 ---
 
 
-### Using makefile 
+### Using makefile
 
 - You need to install Emscripten from https://emscripten.org/docs/getting_started/downloads.html, and have the environment variables set, as described in https://emscripten.org/docs/getting_started/downloads.html#installation-instructions
 

@@ -32,7 +32,7 @@ void CustomChip::rebuild(const sf::Font& font) {
     // Mapeia pinos externos -> InputPin/OutputPin internos
     auto inPins = internal_->findGatesOfType(GateType::INPUT_PIN);
     auto outPins = internal_->findGatesOfType(GateType::OUTPUT_PIN);
-    for (auto* g : inPins)  inputPins_.push_back(static_cast<InputPin*>(g));
+    for (auto* g : inPins) inputPins_.push_back(static_cast<InputPin*>(g));
     for (auto* g : outPins) outputPins_.push_back(static_cast<OutputPin*>(g));
 
     // Garante que o corpo tenha tamanho suficiente para todos os pinos.
@@ -50,7 +50,7 @@ void CustomChip::updateLogic() {
     }
 
     // 2) Simula o circuito interno (reset + fios + updateLogic de cada gate,
-    //    incluindo chips aninhados de forma recursiva).
+    // incluindo chips aninhados de forma recursiva).
     internal_->simulate();
 
     // 3) Lê as saídas internas e atualiza as saídas externas do chip.

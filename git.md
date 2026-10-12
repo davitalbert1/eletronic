@@ -1,4 +1,4 @@
-# Git Cheatsheet - Eletronic
+# Git Cheatsheet - eletronic
 
 ## Setup Inicial do Repositório
 
@@ -13,8 +13,6 @@ git init
 ```bash
 git remote add origin https://github.com/davitalbert1/eletronic.git
 ```
-
-ou
 
 ```bash
 git remote add origin git@github.com:davitalbert1/eletronic.git
@@ -61,10 +59,14 @@ ssh -T git@github.com
 Resposta esperada:
 
 ```text
-Hi davitalbert1! You've successfully authenticated, but GitHub does not provide shell access.
+Hi davitalbert1! You've successfully authenticated, but GitHub does not provide shell eletronic.
 ```
 
 ## Alterar repositório para SSH
+
+```bash
+git remote set-url origin https://github.com/davitalbert1/eletronic.git
+```
 
 ```bash
 git remote set-url origin git@github.com:davitalbert1/eletronic.git

@@ -744,10 +744,16 @@ std::string CircuitLanguageParser::generateComponentDescription(
 
             int fromPinIdx = -1, toPinIdx = -1;
             for (size_t i = 0; i < wire.fromPin->parent->outputs.size(); i++) {
-                if (&wire.fromPin->parent->outputs[i] == wire.fromPin) { fromPinIdx = (int)i; break; }
+                if (&wire.fromPin->parent->outputs[i] == wire.fromPin) {
+                    fromPinIdx = (int)i;
+                    break;
+                }
             }
             for (size_t i = 0; i < wire.toPin->parent->inputs.size(); i++) {
-                if (&wire.toPin->parent->inputs[i] == wire.toPin) { toPinIdx = (int)i; break; }
+                if (&wire.toPin->parent->inputs[i] == wire.toPin) {
+                    toPinIdx = (int)i;
+                    break;
+                }
             }
             if (fromPinIdx >= 0 && toPinIdx >= 0) {
                 out << "wire " << fromIt->second << "." << fromPinIdx << " -> " << toIt->second << "." << toPinIdx << "\n";

@@ -1,9 +1,10 @@
 #include "Workbench.h"
 #include "Constants.h"
 #include "chip/Json.h"
-#include "misc/cpp/imgui_stdlib.h"
-#include <SFML/Graphics.hpp>
 #include <imgui.h>
+#include "misc/cpp/imgui_stdlib.h"
+#include "GateRegistry.h"
+#include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <cstdint>
 #include <windows.h>
@@ -1717,7 +1718,7 @@ void Workbench::renderUniversalCircuitWindow() {
                 for (size_t i = 0; i < placedGates_.size(); ++i) {
                     auto& g = placedGates_[i];
                     std::string label = "Comp #" + std::to_string(i) + " [" +
-                                        PdfExporter().gateTypeToString(g->getType()) + "]";
+                                        GateRegistry::instance().getCodeName(g->getType()) + "]";
                     if (g->getType() == GateType::CHIP) {
                         label += " ID=" + g->getChipId();
                     } else if (g->getType() == GateType::INPUT_PIN || g->getType() == GateType::OUTPUT_PIN) {
@@ -1761,12 +1762,17 @@ void Workbench::renderUniversalCircuitWindow() {
                     bool signal = w.fromPin ? w.fromPin->state : false;
                     ImGui::Text("Fio #%zu: [%s] -> [%s] | Sinal: %s",
                                 i,
-                                (w.fromPin && w.fromPin->parent) ? PdfExporter().gateTypeToString(w.fromPin->parent->getType()).c_str() : "Pino",
-                                (w.toPin && w.toPin->parent) ? PdfExporter().gateTypeToString(w.toPin->parent->getType()).c_str() : "Pino",
+                                (w.fromPin && w.fromPin->parent) ? GateRegistry::instance().getCodeName(w.fromPin->parent->getType()).c_str() : "Pino",
+                                (w.toPin && w.toPin->parent) ? GateRegistry::instance().getCodeName(w.toPin->parent->getType()).c_str() : "Pino",
                                 signal ? "ALTO (1)" : "BAIXO (0)");
                 }
             }
             ImGui::EndChild();
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Sintese Logica Automatica (AI/Heuristica)")) {
+            renderSynthesizerTab();
             ImGui::EndTabItem();
         }
 
@@ -1779,4 +1785,124 @@ void Workbench::renderUniversalCircuitWindow() {
     }
 
     ImGui::End();
+}
+
+void Workbench::renderSynthesizerTab() {
+    ImGui::TextColored(ImVec4(0.2f, 0.8f, 1.0f, 1.0f), "Gerador Automatico de Circuitos Logicos (Estilo dice.cpp)");
+    ImGui::TextWrapped("Informe as entradas, saidas e o processamento esperado (por expressoes booleanas ou tabela verdade). O sintetizador ira buscar e compor um circuito utilizando portas padrao e chips criados por usuarios.");
+    ImGui::Separator();
+
+    // Preset selector
+    auto presets = CircuitSynthesizer::getAvailablePresets();
+    std::vector<const char*> presetCStrs;
+    for (const auto& p : presets) presetCStrs.push_back(p.c_str());
+
+    if (ImGui::Combo("Carregar Exemplo / Preset", &synthSelectedPreset_, presetCStrs.data(), (int)presetCStrs.size())) {
+        if (synthSelectedPreset_ >= 0 && synthSelectedPreset_ < (int)presets.size()) {
+            auto cfg = CircuitSynthesizer::createPreset(presets[synthSelectedPreset_]);
+
+            // Format inputs
+            std::ostringstream ssIn;
+            for (size_t i = 0; i < cfg.inputs.size(); ++i) {
+                if (i > 0) ssIn << ", ";
+                ssIn << cfg.inputs[i];
+            }
+            synthInputsBuffer_ = ssIn.str();
+
+            // Format outputs
+            std::ostringstream ssOut;
+            for (size_t i = 0; i < cfg.outputs.size(); ++i) {
+                if (i > 0) ssOut << ", ";
+                ssOut << cfg.outputs[i];
+            }
+            synthOutputsBuffer_ = ssOut.str();
+
+            // Format processing expressions
+            std::ostringstream ssProc;
+            for (const auto& kv : cfg.targetExpressions) {
+                ssProc << kv.first << " = " << kv.second << "\n";
+            }
+            synthProcessBuffer_ = ssProc.str();
+
+            // Format allowed gates
+            std::ostringstream ssGates;
+            for (size_t i = 0; i < cfg.allowedGates.size(); ++i) {
+                if (i > 0) ssGates << ", ";
+                ssGates << cfg.allowedGates[i];
+            }
+            synthAllowedGatesBuffer_ = ssGates.str();
+        }
+    }
+
+    ImGui::Spacing();
+    ImGui::InputText("Entradas (ex: A, B, Cin)", &synthInputsBuffer_);
+    ImGui::InputText("Saidas (ex: S, Cout)", &synthOutputsBuffer_);
+
+    ImGui::Text("Processamento Esperado:");
+    ImGui::TextDisabled("Suporta expressoes (ex: S = A ^ B) ou tabela verdade (ex: TABLE_S = 0110). Operadores: &, |, ^, !");
+    ImGui::InputTextMultiline("##synth_process", &synthProcessBuffer_, ImVec2(-FLT_MIN, 90));
+
+    ImGui::InputText("Portas Primitivas Permitidas", &synthAllowedGatesBuffer_);
+    ImGui::Checkbox("Permitir Chips Criados por Usuarios (da ChipLibrary)", &synthIncludeUserChips_);
+
+    ImGui::Spacing();
+    if (ImGui::Button("Sintetizar Circuito Automaticamente", ImVec2(280, 36))) {
+        // Monta a configuração de síntese
+        std::string rawConfig;
+        rawConfig += "INPUTS = " + synthInputsBuffer_ + "\n";
+        rawConfig += "OUTPUTS = " + synthOutputsBuffer_ + "\n";
+        rawConfig += "GATES = " + synthAllowedGatesBuffer_ + "\n";
+        rawConfig += synthProcessBuffer_ + "\n";
+        rawConfig += "NAME = " + (currentProjectName_.empty() ? "Sintetizado" : currentProjectName_) + "\n";
+
+        SynthesisConfig cfg = CircuitSynthesizer::parseConfig(rawConfig);
+        if (!synthIncludeUserChips_) {
+            cfg.allowedChips = {"__NONE__"};
+        }
+
+        CircuitCandidate cand = synthesizer_.synthesize(cfg, font_);
+        synthResultSummary_ = cand.summary;
+        synthResultCdl_ = cand.cdlCode;
+
+        if (cand.valido && cand.erro == 0.0L) {
+            placedGates_ = cand.gates;
+            wires_ = cand.wires;
+            universalEditorBuffer_ = cand.cdlCode;
+            statusMessage_ = "Circuito sintetizado com 100% de precisao e aplicado a bancada!";
+            statusMessageTimer_ = 6.0f;
+        } else if (cand.valido) {
+            placedGates_ = cand.gates;
+            wires_ = cand.wires;
+            universalEditorBuffer_ = cand.cdlCode;
+            statusMessage_ = "Circuito aproximado gerado com " + std::to_string((1.0 - cand.erro) * 100.0) + "% de precisao.";
+            statusMessageTimer_ = 6.0f;
+        } else {
+            statusMessage_ = "Nao foi possivel sintetizar circuito valido com as restricoes dadas.";
+            statusMessageTimer_ = 6.0f;
+        }
+    }
+
+    if (!synthResultSummary_.empty()) {
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.4f, 1.0f), "Resultado da Sintese:");
+        ImGui::TextUnformatted(synthResultSummary_.c_str());
+
+        if (ImGui::Button("Copiar Codigo CDL Gerado")) {
+            ImGui::SetClipboardText(synthResultCdl_.c_str());
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Aplicar Novamente a Bancada")) {
+            std::string err;
+            std::vector<std::string> warns;
+            std::vector<std::shared_ptr<Gate>> newGates;
+            std::vector<Wire> newWires;
+            if (circuitLanguageParser_.applyTextToCircuit(synthResultCdl_, newGates, newWires, font_, err, warns)) {
+                placedGates_ = newGates;
+                wires_ = newWires;
+                statusMessage_ = "Circuito reaplicado com sucesso!";
+                statusMessageTimer_ = 4.0f;
+            }
+        }
+    }
 }

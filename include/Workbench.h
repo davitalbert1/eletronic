@@ -19,6 +19,7 @@
 #include "ImageExporter.h"
 #include "PdfExporter.h"
 #include "DigitalLogicSimImporter.h"
+#include "CircuitSynthesizer.h"
 
 class Workbench {
 public:
@@ -71,6 +72,7 @@ public:
     // Universal Circuit Window and Component Inspector
     void renderInspector();
     void renderUniversalCircuitWindow();
+    void renderSynthesizerTab();
     std::shared_ptr<Gate> getSelectedGate();
 
     // Image export
@@ -155,6 +157,17 @@ private:
     std::string circuitLanguageBuffer_;
     std::string exportFilePathBuffer_;
     std::string exportFormatBuffer_ = "png";
+
+    // Circuit Synthesizer State
+    CircuitSynthesizer synthesizer_;
+    std::string synthInputsBuffer_ = "A, B";
+    std::string synthOutputsBuffer_ = "S, Cout";
+    std::string synthProcessBuffer_ = "S = A ^ B\nCout = A & B";
+    std::string synthAllowedGatesBuffer_ = "AND, OR, NOT, XOR, NAND, NOR, XNOR";
+    std::string synthResultSummary_;
+    std::string synthResultCdl_;
+    bool synthIncludeUserChips_ = true;
+    int synthSelectedPreset_ = 0;
 
     // Image and PDF exporters
     ImageExporter imageExporter_;

@@ -14,6 +14,6 @@ build/simulator.exe
 ```
 
 ```bash
-# Linux/macOS
+# Linux/macOS/mingw
 ./build/simulator
 ```

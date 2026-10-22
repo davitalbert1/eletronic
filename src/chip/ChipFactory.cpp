@@ -1,12 +1,11 @@
 #include "chip/ChipFactory.h"
 #include "chip/ChipLibrary.h"
 #include "LogicEntities.h"
+#include "GateRegistry.h"
 #include <fstream>
 
 namespace chip {
-    std::shared_ptr<CustomChip> createChipInstance(const std::string& chipId,
-                                                sf::Vector2f pos,
-                                                const sf::Font& font) {
+    std::shared_ptr<CustomChip> createChipInstance(const std::string& chipId, sf::Vector2f pos, const sf::Font& font) {
         auto def = ChipLibrary::instance().findById(chipId);
         if (!def) return nullptr;
         return std::make_shared<CustomChip>(pos, font, def);
@@ -20,29 +19,8 @@ namespace chip {
     namespace {
         std::shared_ptr<Gate> makeGate(GateType t, sf::Vector2f pos, const sf::Font& font,
                                     const std::string& chipId, const std::string& pinName) {
-            switch (t) {
-                case GateType::AND: return std::make_shared<ANDGate>(pos, font);
-                case GateType::OR: return std::make_shared<ORGate>(pos, font);
-                case GateType::NOT: return std::make_shared<NOTGate>(pos, font);
-                case GateType::XOR: return std::make_shared<XORGate>(pos, font);
-                case GateType::NAND: return std::make_shared<NANDGate>(pos, font);
-                case GateType::NOR: return std::make_shared<NORGate>(pos, font);
-                case GateType::XNOR: return std::make_shared<XNORGate>(pos, font);
-                case GateType::CLOCK: return std::make_shared<ClockGate>(pos, font);
-                case GateType::POWER: return std::make_shared<PowerSource>(pos, font);
-                case GateType::SWITCH: return std::make_shared<Switch>(pos, font);
-                case GateType::BUTTON: return std::make_shared<Button>(pos, font);
-                case GateType::LED: return std::make_shared<LED>(pos, font);
-                case GateType::ROM: return std::make_shared<ROM>(pos, font);
-                case GateType::SEG7: return std::make_shared<Seg7Display>(pos, font);
-                case GateType::LCD: return std::make_shared<LCDDisplay>(pos, font);
-                case GateType::COUNTER: return std::make_shared<Counter>(pos, font);
-                case GateType::REGISTER: return std::make_shared<Register>(pos, font);
-                case GateType::INPUT_PIN: return std::make_shared<InputPin>(pos, font, pinName);
-                case GateType::OUTPUT_PIN: return std::make_shared<OutputPin>(pos, font, pinName);
-                case GateType::CHIP: return createChipInstance(chipId, pos, font);
-                default: return nullptr;
-            }
+            std::string extraParam = (t == GateType::CHIP) ? chipId : pinName;
+            return GateRegistry::instance().createGate(t, pos, font, extraParam);
         }
     }
 

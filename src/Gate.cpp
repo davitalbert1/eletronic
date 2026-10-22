@@ -1,4 +1,5 @@
 ﻿#include "Gate.h"
+#include "GateRegistry.h"
 #include <string>
 #include <array>
 
@@ -35,7 +36,7 @@ bool Pin::contains(sf::Vector2f point) const {
 
 // Gate implementation
 Gate::Gate(GateType t, sf::Vector2f pos, const sf::Font& font)
-    : type(t), position(pos), label(font, GateLabels[static_cast<int>(t)], 16) {
+    : type(t), position(pos), label(font, GateRegistry::instance().getLabel(t), 16) {
     body.setSize({Config::GateWidth, Config::GateHeight});
     body.setPosition(position);
     body.setFillColor(Theme::GateBody);

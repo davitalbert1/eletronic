@@ -1,6 +1,7 @@
 #include "Workbench.h"
 #include "Constants.h"
 #include "chip/Json.h"
+#include "misc/cpp/imgui_stdlib.h"
 #include <SFML/Graphics.hpp>
 #include <imgui.h>
 #include <algorithm>
@@ -18,6 +19,7 @@ Workbench::Workbench(const sf::Font& font)
     , ui_(font)
     , undoRedoManager_(std::make_unique<UndoRedoManager>(50))
     , confirmationDialog_(std::make_unique<ConfirmationDialog>()) {
+    loadAllChipsFromDisk();
     refreshChipPalette();
     refreshCategories();
     // Startup: show project selection dialog
@@ -177,6 +179,76 @@ void Workbench::updateChipFromCurrent(const std::string& id) {
     chip::saveChipDefinition(def, ("projetos/chips/" + id + ".chip"));
     statusMessage_ = "Chip '" + def->name + "' atualizado (v" + std::to_string(def->version) + ").";
     statusMessageTimer_ = 4.0f;
+}
+
+void Workbench::loadAllChipsFromDisk() {
+    fs::path dir = "projetos/chips";
+    if (!fs::exists(dir)) return;
+
+    for (const auto& entry : fs::directory_iterator(dir)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".chip") {
+            auto def = chip::loadChipDefinition(entry.path().string(), font_);
+            if (def && def->isValid()) {
+                chip::ChipLibrary::instance().registerChip(def);
+            }
+        }
+    }
+}
+
+bool Workbench::loadChipForEditing(const std::string& id) {
+    auto def = chip::ChipLibrary::instance().findById(id);
+    if (!def || !def->circuit) return false;
+
+    placedGates_.clear();
+    wires_.clear();
+
+    auto cloned = def->circuit->clone(font_);
+    placedGates_ = cloned->gates;
+    wires_ = cloned->wires;
+
+    currentProjectName_ = def->name;
+    currentDescription_ = def->description;
+    currentCategory_ = def->category;
+
+    statusMessage_ = "Circuito do chip '" + def->name + "' carregado na bancada para edicao.";
+    statusMessageTimer_ = 4.0f;
+    return true;
+}
+
+bool Workbench::deleteChip(const std::string& id) {
+    auto def = chip::ChipLibrary::instance().findById(id);
+    if (!def) return false;
+
+    std::string name = def->name;
+    chip::ChipLibrary::instance().unregister(id);
+
+    // Remove from placed gates if present
+    placedGates_.erase(std::remove_if(placedGates_.begin(), placedGates_.end(),
+        [&](const std::shared_ptr<Gate>& g) {
+            return g->getType() == GateType::CHIP && g->getChipId() == id;
+        }), placedGates_.end());
+
+    // Clean broken wires
+    wires_.erase(std::remove_if(wires_.begin(), wires_.end(),
+        [&](const Wire& w) {
+            bool fromValid = false, toValid = false;
+            for (const auto& g : placedGates_) {
+                if (g.get() == w.fromPin->parent) fromValid = true;
+                if (g.get() == w.toPin->parent) toValid = true;
+            }
+            return !fromValid || !toValid;
+        }), wires_.end());
+
+    // Delete file from disk
+    fs::path p = fs::path("projetos/chips") / (id + ".chip");
+    if (fs::exists(p)) {
+        fs::remove(p);
+    }
+
+    refreshChipPalette();
+    statusMessage_ = "Chip '" + name + "' excluído da biblioteca e do disco.";
+    statusMessageTimer_ = 4.0f;
+    return true;
 }
 
 void Workbench::saveState() {
@@ -372,6 +444,15 @@ void Workbench::updatePropagation() {
 }
 
 void Workbench::handleEvent(const sf::Event& event, const sf::RenderWindow& window) {
+    // If ImGui wants mouse or keyboard input, do not dispatch to workbench canvas
+    ImGuiIO& io = ImGui::GetIO();
+    if (event.is<sf::Event::MouseButtonPressed>() || event.is<sf::Event::MouseButtonReleased>() || event.is<sf::Event::MouseMoved>() || event.is<sf::Event::MouseWheelScrolled>()) {
+        if (io.WantCaptureMouse) return;
+    }
+    if (event.is<sf::Event::KeyPressed>() || event.is<sf::Event::KeyReleased>() || event.is<sf::Event::TextEntered>()) {
+        if (io.WantCaptureKeyboard) return;
+    }
+
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
     sf::Vector2f mousePosF(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y));
 
@@ -726,6 +807,15 @@ void Workbench::handleEvent(const sf::Event& event, const sf::RenderWindow& wind
         }
         ui_.clearTooltip();
     } else if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
+        if (keyPressed->code == sf::Keyboard::Key::I && keyPressed->control) {
+            showInspector_ = !showInspector_;
+            return;
+        }
+        if (keyPressed->code == sf::Keyboard::Key::U && keyPressed->control && keyPressed->shift) {
+            showUniversalWindow_ = !showUniversalWindow_;
+            return;
+        }
+
         WorkbenchInput::SelectionFilter currentFilter = currentFilter_;
         input_.handleKeyPress(*keyPressed, mousePosF, placedGates_, wires_,
                              isSaveModal_, isLoadModal_, showHelp_, showConfirmDialog_,
@@ -864,7 +954,7 @@ void Workbench::renderImGui() {
     }
 
     ImGui::Separator();
-    ImGui::Text("Chips personalizados:");
+    ImGui::TextColored(ImVec4(0.3f, 0.9f, 0.5f, 1.0f), "Criar Novo Chip Personalizado:");
     static char chipId[64] = "meu_chip";
     static char chipName[64] = "Meu Chip";
     static char chipDesc[128] = "";
@@ -873,21 +963,59 @@ void Workbench::renderImGui() {
     ImGui::InputText("Nome", chipName, sizeof(chipName));
     ImGui::InputText("Categoria", chipCat, sizeof(chipCat));
     ImGui::InputText("Descricao", chipDesc, sizeof(chipDesc));
-    if (ImGui::Button("Salvar como Chip")) {
+    if (ImGui::Button("Salvar Circuito Atual como Chip")) {
         saveCurrentAsChip(chipId, chipName, chipDesc, chipCat);
+    }
+
+    // Lista de chips existentes na biblioteca com botões de Usar, Editar e Deletar
+    auto allChips = chip::ChipLibrary::instance().all();
+    if (!allChips.empty()) {
+        ImGui::Spacing();
+        ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "Gerenciar Chips da Biblioteca (%zu):", allChips.size());
+        for (const auto& ch : allChips) {
+            ImGui::PushID(ch->id.c_str());
+            ImGui::BulletText("%s (%s) - %zu In, %zu Out", ch->name.c_str(), ch->id.c_str(), ch->inputs.size(), ch->outputs.size());
+
+            if (ImGui::Button("Inserir na Bancada")) {
+                auto inst = chip::createChipInstance(ch, sf::Vector2f(400.0f, 300.0f), font_);
+                if (inst) {
+                    for (auto& g : placedGates_) g->isSelected = false;
+                    inst->isSelected = true;
+                    placedGates_.push_back(inst);
+                    statusMessage_ = "Chip '" + ch->name + "' adicionado ao canvas.";
+                    statusMessageTimer_ = 3.0f;
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Carregar p/ Editar")) {
+                loadChipForEditing(ch->id);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Atualizar")) {
+                updateChipFromCurrent(ch->id);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Deletar")) {
+                deleteChip(ch->id);
+                ImGui::PopID();
+                break;
+            }
+            ImGui::PopID();
+        }
     }
 
     ImGui::Separator();
 
-    if (ImGui::Button("Export JSON")) {
+    if (ImGui::Button("Export JSON (Legacy)")) {
         if (!currentProjectName_.empty()) projectManager_.exportJSON(currentProjectName_, currentCategory_, placedGates_, wires_);
     }
-    if (ImGui::Button("Export XML")) {
+    if (ImGui::Button("Export XML (Legacy)")) {
         if (!currentProjectName_.empty()) projectManager_.exportXML(currentProjectName_, currentCategory_, placedGates_, wires_);
-    if (ImGui::Button("Export JSON")) {
+    }
+    if (ImGui::Button("Export JSON (Enhanced)")) {
         if (!currentProjectName_.empty()) exportJSONEnhanced(currentProjectName_, currentCategory_);
     }
-    if (ImGui::Button("Export XML")) {
+    if (ImGui::Button("Export XML (Enhanced)")) {
         if (!currentProjectName_.empty()) exportXMLEnhanced(currentProjectName_, currentCategory_);
     }
     if (ImGui::Button("Export PNG")) {
@@ -901,12 +1029,15 @@ void Workbench::renderImGui() {
     }
 
     ImGui::Separator();
+    ImGui::Text("Ferramentas Textuais:");
+    ImGui::Checkbox("Inspetor Lateral", &showInspector_);
+    ImGui::Checkbox("Janela Universal de Circuitos", &showUniversalWindow_);
+
     if (ImGui::Button("Import Circuit Language (.cdl)")) {
         showCircuitLanguageDialog_ = true;
     }
     if (ImGui::Button("Export Circuit Language (.cdl)")) {
         if (!currentProjectName_.empty()) exportToCircuitLanguage(currentProjectName_ + ".cdl");
-    }
     }
 
     ImGui::Separator();
@@ -914,6 +1045,10 @@ void Workbench::renderImGui() {
     if (ImGui::Button("Create Backup Now")) projectManager_.createBackup(currentProjectName_, placedGates_, wires_);
 
     ImGui::End();
+
+    // Render inspector and universal circuit window
+    if (showInspector_) renderInspector();
+    if (showUniversalWindow_) renderUniversalCircuitWindow();
 }
 
 void Workbench::showConfirmation(ConfirmationDialog::Action action, const std::string& message, int projectIndex) {
@@ -1354,4 +1489,294 @@ void Workbench::exportXMLEnhanced(const std::string& baseName, const std::string
         statusMessage_ = "Erro ao exportar XML";
         statusMessageTimer_ = 3.0f;
     }
+}
+std::shared_ptr<Gate> Workbench::getSelectedGate() {
+    for (auto it = placedGates_.rbegin(); it != placedGates_.rend(); ++it) {
+        if ((*it)->isSelected) return *it;
+    }
+    return nullptr;
+}
+
+void Workbench::renderInspector() {
+    auto selected = getSelectedGate();
+
+    ImGui::SetNextWindowSize(ImVec2(340, 520), ImGuiCond_FirstUseEver);
+    if (!ImGui::Begin("Inspetor de Componente", &showInspector_)) {
+        ImGui::End();
+        return;
+    }
+
+    if (!selected) {
+        ImGui::TextDisabled("Nenhum componente selecionado.");
+        ImGui::TextWrapped("Clique em qualquer porta, chip ou pino no circuito para inspecionar, editar parametros e visualizar/editar sua definicao textual (CDL).");
+        ImGui::End();
+        return;
+    }
+
+    // Keep inspector text buffer synchronized when selected component changes
+    if (selected != lastInspectedGate_) {
+        lastInspectedGate_ = selected;
+        inspectorTextBuffer_ = circuitLanguageParser_.generateComponentDescription(
+            selected, placedGates_, wires_, "");
+    }
+
+    // Component General Information
+    ImGui::TextColored(ImVec4(0.2f, 0.8f, 1.0f, 1.0f), "Propriedades do Componente");
+    ImGui::Separator();
+
+    static const std::map<GateType, std::string> typeLabels = {
+        {GateType::AND, "Porta AND"}, {GateType::OR, "Porta OR"}, {GateType::NOT, "Porta NOT"},
+        {GateType::XOR, "Porta XOR"}, {GateType::NAND, "Porta NAND"}, {GateType::NOR, "Porta NOR"},
+        {GateType::XNOR, "Porta XNOR"}, {GateType::CLOCK, "Gerador de Clock"}, {GateType::POWER, "Fonte de Alimentacao"},
+        {GateType::SWITCH, "Chave Liga/Desliga"}, {GateType::BUTTON, "Botao Pulsador"}, {GateType::LED, "LED Indicador"},
+        {GateType::ROM, "Memoria ROM"}, {GateType::SEG7, "Display 7 Segmentos"}, {GateType::LCD, "Display LCD"},
+        {GateType::COUNTER, "Contador 4-bits"}, {GateType::REGISTER, "Registrador 4-bits"},
+        {GateType::INPUT_PIN, "Pino de Entrada"}, {GateType::OUTPUT_PIN, "Pino de Saida"}, {GateType::CHIP, "Chip Personalizado"}
+    };
+    auto typeIt = typeLabels.find(selected->getType());
+    std::string typeName = typeIt != typeLabels.end() ? typeIt->second : "Componente Generico";
+
+    ImGui::Text("Tipo: %s", typeName.c_str());
+
+    if (selected->getType() == GateType::CHIP) {
+        ImGui::Text("Chip ID: %s", selected->getChipId().c_str());
+    } else if (selected->getType() == GateType::INPUT_PIN || selected->getType() == GateType::OUTPUT_PIN) {
+        std::string pName = selected->getPinName();
+        char pinBuf[64];
+        strncpy(pinBuf, pName.c_str(), sizeof(pinBuf) - 1);
+        pinBuf[sizeof(pinBuf) - 1] = '\0';
+        if (ImGui::InputText("Nome do Pino", pinBuf, sizeof(pinBuf))) selected->setPinName(pinBuf);
+    }
+
+    // Position and Rotation
+    sf::Vector2f pos = selected->getPosition();
+    float posArr[2] = {pos.x, pos.y};
+    if (ImGui::DragFloat2("Posicao (X, Y)", posArr, 1.0f, 0.0f, 5000.0f, "%.0f")) {
+        selected->setPosition(sf::Vector2f(posArr[0], posArr[1]));
+    }
+
+    float rot = selected->getRotation();
+    if (ImGui::SliderFloat("Rotacao", &rot, 0.0f, 360.0f, "%.0f deg")) {
+        selected->setRotation(rot);
+    }
+
+    // Extra Data / Internal States
+    float extra = selected->getExtraData();
+    if (selected->getType() == GateType::CLOCK) {
+        if (ImGui::DragFloat("Intervalo (s)", &extra, 0.05f, 0.05f, 10.0f, "%.2f s")) {
+            selected->setExtraData(extra);
+        }
+    } else if (selected->getType() == GateType::POWER || selected->getType() == GateType::SWITCH) {
+        bool state = extra > 0.5f;
+        if (ImGui::Checkbox("Estado Ativo", &state)) {
+            selected->setExtraData(state ? 1.0f : 0.0f);
+        }
+    } else if (selected->getType() == GateType::COUNTER || selected->getType() == GateType::REGISTER) {
+        int val = static_cast<int>(extra);
+        if (ImGui::InputInt("Valor Inicial", &val)) {
+            selected->setExtraData(static_cast<float>(val));
+        }
+    }
+
+    // Pins and Signals status
+    ImGui::Spacing();
+    ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "Estados dos Pinos:");
+    ImGui::Text("Entradas (%zu):", selected->inputs.size());
+    for (size_t i = 0; i < selected->inputs.size(); ++i) {
+        bool st = selected->inputs[i].state;
+        ImGui::BulletText("In [%zu]: %s", i, st ? "ALTO (1)" : "BAIXO (0)");
+    }
+    ImGui::Text("Saidas (%zu):", selected->outputs.size());
+    for (size_t i = 0; i < selected->outputs.size(); ++i) {
+        bool st = selected->outputs[i].state;
+        ImGui::BulletText("Out [%zu]: %s", i, st ? "ALTO (1)" : "BAIXO (0)");
+    }
+
+    // CDL Text Representation
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.4f, 1.0f), "Linguagem Textual (CDL):");
+
+    if (ImGui::Button("Recarregar do Componente")) {
+        inspectorTextBuffer_ = circuitLanguageParser_.generateComponentDescription(
+            selected, placedGates_, wires_, "");
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Copiar CDL")) {
+        ImGui::SetClipboardText(inspectorTextBuffer_.c_str());
+    }
+
+    ImGui::InputTextMultiline("##inspector_cdl", &inspectorTextBuffer_,
+                             ImVec2(-FLT_MIN, 130),
+                             ImGuiInputTextFlags_AllowTabInput);
+
+    if (ImGui::Button("Aplicar Alteracoes Textuais")) {
+        std::string err;
+        std::vector<std::string> warns;
+        std::vector<std::shared_ptr<Gate>> newGates;
+        std::vector<Wire> newWires;
+        if (circuitLanguageParser_.applyTextToCircuit(inspectorTextBuffer_, newGates, newWires, font_, err, warns)) {
+            // If parsed component and wires, update current component & wires
+            if (!newGates.empty()) {
+                auto updated = newGates[0];
+                selected->setPosition(updated->getPosition());
+                statusMessage_ = "Componente atualizado com sucesso via texto!";
+                statusMessageTimer_ = 3.0f;
+            }
+        } else {
+            statusMessage_ = "Erro no texto CDL: " + err;
+            statusMessageTimer_ = 5.0f;
+        }
+    }
+
+    ImGui::End();
+}
+
+void Workbench::renderUniversalCircuitWindow() {
+    ImGui::SetNextWindowSize(ImVec2(680, 560), ImGuiCond_FirstUseEver);
+    if (!ImGui::Begin("Janela Universal de Circuitos (CDL)", &showUniversalWindow_)) {
+        ImGui::End();
+        return;
+    }
+
+    // Top control bar
+    ImGui::TextColored(ImVec4(0.3f, 0.9f, 0.5f, 1.0f), "Editor & Visualizador Universal de Circuitos");
+    ImGui::Text("Total de Componentes: %zu | Conexoes (Fios): %zu", placedGates_.size(), wires_.size());
+
+    if (ImGui::Button("Gerar CDL do Circuito Atual")) {
+        universalEditorBuffer_ = circuitLanguageParser_.generateDescription(
+            placedGates_, wires_,
+            currentProjectName_.empty() ? "MeuCircuito" : currentProjectName_,
+            currentDescription_
+        );
+        cdlErrorMessage_.clear();
+        cdlWarnings_.clear();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Copiar Tudo")) ImGui::SetClipboardText(universalEditorBuffer_.c_str());
+    ImGui::SameLine();
+    if (ImGui::Button("Carregar Exemplo CDL")) {
+        universalEditorBuffer_ = circuitLanguageParser_.getLanguageHelp();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Limpar Editor")) universalEditorBuffer_.clear();
+
+    if (ImGui::BeginTabBar("UniversalTabs")) {
+        if (ImGui::BeginTabItem("Editor CDL (Criar/Editar Multiplos)")) {
+            ImGui::TextWrapped("Edite ou digite o texto com multiplos componentes e fios. Ao clicar em 'Compilar & Aplicar ao Circuito', o circuito sera atualizado e sincronizado em tempo real.");
+
+            ImVec2 editSize(-FLT_MIN, ImGui::GetContentRegionAvail().y - 85);
+            if (editSize.y < 150) editSize.y = 150;
+
+            ImGui::InputTextMultiline("##universal_cdl_editor", &universalEditorBuffer_,
+                                     editSize, ImGuiInputTextFlags_AllowTabInput);
+
+            if (ImGui::Button("Compilar & Aplicar ao Circuito", ImVec2(240, 32))) {
+                std::string err;
+                std::vector<std::string> warns;
+                std::vector<std::shared_ptr<Gate>> newGates;
+                std::vector<Wire> newWires;
+                bool ok = circuitLanguageParser_.applyTextToCircuit(
+                    universalEditorBuffer_, newGates, newWires, font_, err, warns);
+
+                if (ok) {
+                    placedGates_ = newGates;
+                    wires_ = newWires;
+                    cdlErrorMessage_.clear();
+                    cdlWarnings_ = warns;
+                    statusMessage_ = "Circuito sincronizado com sucesso (" +
+                                     std::to_string(placedGates_.size()) + " componentes, " +
+                                     std::to_string(wires_.size()) + " conexoes).";
+                    statusMessageTimer_ = 5.0f;
+                } else {
+                    cdlErrorMessage_ = err;
+                    cdlWarnings_ = warns;
+                    statusMessage_ = "Erro na compilacao CDL: " + err;
+                    statusMessageTimer_ = 6.0f;
+                }
+            }
+
+            if (!cdlErrorMessage_.empty()) {
+                ImGui::Spacing();
+                ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Erro: %s", cdlErrorMessage_.c_str());
+            }
+            if (!cdlWarnings_.empty()) {
+                for (const auto& w : cdlWarnings_) {
+                    ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "Aviso: %s", w.c_str());
+                }
+            }
+
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Monitor de Estados em Tempo Real")) {
+            ImGui::Text("Lista completa de todos os componentes e seus estados atuais:");
+            ImGui::Separator();
+
+            if (ImGui::BeginChild("StatesList", ImVec2(0, 0), true)) {
+                for (size_t i = 0; i < placedGates_.size(); ++i) {
+                    auto& g = placedGates_[i];
+                    std::string label = "Comp #" + std::to_string(i) + " [" +
+                                        PdfExporter().gateTypeToString(g->getType()) + "]";
+                    if (g->getType() == GateType::CHIP) {
+                        label += " ID=" + g->getChipId();
+                    } else if (g->getType() == GateType::INPUT_PIN || g->getType() == GateType::OUTPUT_PIN) {
+                        label += " (" + g->getPinName() + ")";
+                    }
+
+                    if (ImGui::TreeNode(label.c_str())) {
+                        sf::Vector2f pos = g->getPosition();
+                        ImGui::Text("Posicao: (%.0f, %.0f) | Rotacao: %.0f", pos.x, pos.y, g->getRotation());
+                        ImGui::Text("Selecionado: %s", g->isSelected ? "SIM" : "NAO");
+
+                        ImGui::Text("Entradas (%zu):", g->inputs.size());
+                        for (size_t inp = 0; inp < g->inputs.size(); ++inp) {
+                            ImGui::BulletText("Pino %zu: %s", inp, g->inputs[inp].state ? "HIGH (1)" : "LOW (0)");
+                        }
+
+                        ImGui::Text("Saidas (%zu):", g->outputs.size());
+                        for (size_t outp = 0; outp < g->outputs.size(); ++outp) {
+                            ImGui::BulletText("Pino %zu: %s", outp, g->outputs[outp].state ? "HIGH (1)" : "LOW (0)");
+                        }
+
+                        if (ImGui::Button("Selecionar no Canvas")) {
+                            for (auto& item : placedGates_) item->isSelected = false;
+                            g->isSelected = true;
+                        }
+                        ImGui::TreePop();
+                    }
+                }
+            }
+            ImGui::EndChild();
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Conexoes (Fios)")) {
+            ImGui::Text("Total de fios conectados: %zu", wires_.size());
+            ImGui::Separator();
+
+            if (ImGui::BeginChild("WiresList", ImVec2(0, 0), true)) {
+                for (size_t i = 0; i < wires_.size(); ++i) {
+                    const auto& w = wires_[i];
+                    bool signal = w.fromPin ? w.fromPin->state : false;
+                    ImGui::Text("Fio #%zu: [%s] -> [%s] | Sinal: %s",
+                                i,
+                                (w.fromPin && w.fromPin->parent) ? PdfExporter().gateTypeToString(w.fromPin->parent->getType()).c_str() : "Pino",
+                                (w.toPin && w.toPin->parent) ? PdfExporter().gateTypeToString(w.toPin->parent->getType()).c_str() : "Pino",
+                                signal ? "ALTO (1)" : "BAIXO (0)");
+                }
+            }
+            ImGui::EndChild();
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Ajuda da Linguagem CDL")) {
+            ImGui::TextUnformatted(circuitLanguageParser_.getLanguageHelp().c_str());
+            ImGui::EndTabItem();
+        }
+
+        ImGui::EndTabBar();
+    }
+
+    ImGui::End();
 }

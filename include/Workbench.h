@@ -30,15 +30,20 @@ public:
     void load(const std::string& name);
 
     // Chips personalizados
-    // Converte o circuito atual em um chip reutilizÃ¡vel. Requer que o
+    // Converte o circuito atual em um chip reutilizavel. Requer que o
     // projeto contenha ao menos um InputPin e um OutputPin.
-    // 'askUpdate' controla se instÃ¢ncias existentes devem ser atualizadas.
     bool saveCurrentAsChip(const std::string& id, const std::string& name,
                            const std::string& description, const std::string& category,
                            bool askUpdate = true);
-    // Atualiza a definiÃ§Ã£o de um chip jÃ¡ registrado a partir do circuito atual.
+    // Atualiza a definicao de um chip ja registrado a partir do circuito atual.
     void updateChipFromCurrent(const std::string& id);
-    // Adiciona um chip da biblioteca Ã  paleta (chamado apÃ³s registrar).
+    // Carrega um chip na bancada de trabalho para edicao (Digital Logic Sim style)
+    bool loadChipForEditing(const std::string& id);
+    // Deleta um chip personalizado da biblioteca e do disco
+    bool deleteChip(const std::string& id);
+    // Carrega todos os chips salvos no disco (projetos/chips/)
+    void loadAllChipsFromDisk();
+    // Adiciona um chip da biblioteca a paleta (chamado apos registrar/deletar).
     void refreshChipPalette();
 
     // Rendering
@@ -62,6 +67,11 @@ public:
     void importFromCircuitLanguage(const std::string& filePath);
     void exportToCircuitLanguage(const std::string& filePath);
     void showCircuitLanguageDialog();
+
+    // Universal Circuit Window and Component Inspector
+    void renderInspector();
+    void renderUniversalCircuitWindow();
+    std::shared_ptr<Gate> getSelectedGate();
 
     // Image export
     void exportToImage(const std::string& filePath, const std::string& format); // "png" or "svg"
@@ -133,6 +143,13 @@ private:
     // Circuit Language Parser state
     CircuitLanguageParser circuitLanguageParser_;
     bool showCircuitLanguageDialog_ = false;
+    bool showUniversalWindow_ = true;
+    bool showInspector_ = true;
+    std::string inspectorTextBuffer_;
+    std::shared_ptr<Gate> lastInspectedGate_;
+    std::string universalEditorBuffer_;
+    std::string cdlErrorMessage_;
+    std::vector<std::string> cdlWarnings_;
     bool showExportImageDialog_ = false;
     bool showExportPdfDialog_ = false;
     std::string circuitLanguageBuffer_;

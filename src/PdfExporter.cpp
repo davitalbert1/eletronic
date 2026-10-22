@@ -1,4 +1,5 @@
 #include "PdfExporter.h"
+#include "GateRegistry.h"
 #include "Constants.h"
 #include <fstream>
 #include <sstream>
@@ -232,29 +233,7 @@ PdfExporter::CircuitStatistics PdfExporter::calculateStatistics(
 }
 
 std::string PdfExporter::gateTypeToString(GateType type) {
-    switch (type) {
-        case GateType::AND: return "AND";
-        case GateType::OR: return "OR";
-        case GateType::NOT: return "NOT";
-        case GateType::XOR: return "XOR";
-        case GateType::NAND: return "NAND";
-        case GateType::NOR: return "NOR";
-        case GateType::XNOR: return "XNOR";
-        case GateType::CLOCK: return "CLOCK";
-        case GateType::POWER: return "POWER";
-        case GateType::SWITCH: return "SWITCH";
-        case GateType::BUTTON: return "BUTTON";
-        case GateType::LED: return "LED";
-        case GateType::ROM: return "ROM";
-        case GateType::SEG7: return "7SEG";
-        case GateType::LCD: return "LCD";
-        case GateType::COUNTER: return "COUNTER";
-        case GateType::REGISTER: return "REGISTER";
-        case GateType::INPUT_PIN: return "INPUT_PIN";
-        case GateType::OUTPUT_PIN: return "OUTPUT_PIN";
-        case GateType::CHIP: return "CHIP";
-        default: return "UNKNOWN";
-    }
+    return GateRegistry::instance().getCodeName(type);
 }
 
 std::string PdfExporter::escapePdfString(const std::string& str) {

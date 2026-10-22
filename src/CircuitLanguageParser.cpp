@@ -1,5 +1,6 @@
 #include "CircuitLanguageParser.h"
 #include "LogicEntities.h"
+#include "GateRegistry.h"
 #include "chip/ChipFactory.h"
 #include <fstream>
 #include <sstream>
@@ -103,27 +104,7 @@ std::string CircuitLanguageParser::generateDescription(
                 out << "  chip " << gate->getChipId() << " " << id << " at (" << pos.x << ", " << pos.y << ")\n";
                 break;
             default: {
-                static const std::map<GateType, std::string> typeNames = {
-                    {GateType::AND, "AND"},
-                    {GateType::OR, "OR"},
-                    {GateType::NOT, "NOT"},
-                    {GateType::XOR, "XOR"},
-                    {GateType::NAND, "NAND"},
-                    {GateType::NOR, "NOR"},
-                    {GateType::XNOR, "XNOR"},
-                    {GateType::CLOCK, "CLOCK"},
-                    {GateType::POWER, "POWER"},
-                    {GateType::SWITCH, "SWITCH"},
-                    {GateType::BUTTON, "BUTTON"},
-                    {GateType::LED, "LED"},
-                    {GateType::ROM, "ROM"},
-                    {GateType::SEG7, "7SEG"},
-                    {GateType::LCD, "LCD"},
-                    {GateType::COUNTER, "COUNTER"},
-                    {GateType::REGISTER, "REGISTER"}
-                };
-                auto typeIt = typeNames.find(gate->getType());
-                std::string typeName = typeIt != typeNames.end() ? typeIt->second : "UNKNOWN";
+                std::string typeName = GateRegistry::instance().getCodeName(gate->getType());
                 out << "  gate " << typeName << " " << id << " at (" << pos.x << ", " << pos.y << ")\n";
                 break;
             }
@@ -157,9 +138,7 @@ std::string CircuitLanguageParser::generateDescription(
 }
 
 std::vector<std::string> CircuitLanguageParser::supportedGateTypes() {
-    return {"AND", "OR", "NOT", "XOR", "NAND", "NOR", "XNOR",
-            "CLOCK", "POWER", "SWITCH", "BUTTON", "LED", "ROM",
-            "7SEG", "LCD", "COUNTER", "REGISTER"};
+    return GateRegistry::instance().getAllCodeNames();
 }
 
 std::string CircuitLanguageParser::getLanguageHelp() {
@@ -242,6 +221,31 @@ std::vector<Token> CircuitLanguageParser::tokenize(const std::string& source) {
                 advance();
                 advance();
             }
+            continue;
+        }
+
+        // Strings
+        if (c == '"') {
+            advance();
+            std::string strVal;
+            while (pos < source.size() && source[pos] != '"') {
+                if (source[pos] == '\\' && pos + 1 < source.size()) {
+                    advance();
+                    char esc = source[pos];
+                    if (esc == 'n') strVal += '\n';
+                    else if (esc == 't') strVal += '\t';
+                    else if (esc == '"') strVal += '"';
+                    else if (esc == '\\') strVal += '\\';
+                    else strVal += esc;
+                } else {
+                    strVal += source[pos];
+                }
+                advance();
+            }
+            if (pos < source.size() && source[pos] == '"') {
+                advance();
+            }
+            tokens.emplace_back(CircuitTokenType::STRING, strVal, tokenLine, tokenCol);
             continue;
         }
 
@@ -540,70 +544,14 @@ bool CircuitLanguageParser::generateCircuit(
     gateMap_.clear();
     for (const auto& child : ast->children) {
         if (auto gateNode = std::dynamic_pointer_cast<GateNode>(child)) {
-            std::string label;
-            GateType type = mapGateType(gateNode->gateType, label);
-            std::shared_ptr<Gate> gate;
             sf::Vector2f pos(gateNode->x, gateNode->y);
-            switch (type) {
-                case GateType::AND:
-                    gate = std::make_shared<ANDGate>(pos, font);
-                    break;
-                case GateType::OR:
-                    gate = std::make_shared<ORGate>(pos, font);
-                    break;
-                case GateType::NOT:
-                    gate = std::make_shared<NOTGate>(pos, font);
-                    break;
-                case GateType::XOR:
-                    gate = std::make_shared<XORGate>(pos, font);
-                    break;
-                case GateType::NAND:
-                    gate = std::make_shared<NANDGate>(pos, font);
-                    break;
-                case GateType::NOR:
-                    gate = std::make_shared<NORGate>(pos, font);
-                    break;
-                case GateType::XNOR:
-                    gate = std::make_shared<XNORGate>(pos, font);
-                    break;
-                case GateType::CLOCK:
-                    gate = std::make_shared<ClockGate>(pos, font);
-                    break;
-                case GateType::POWER:
-                    gate = std::make_shared<PowerSource>(pos, font);
-                    break;
-                case GateType::SWITCH:
-                    gate = std::make_shared<Switch>(pos, font);
-                    break;
-                case GateType::BUTTON:
-                    gate = std::make_shared<Button>(pos, font);
-                    break;
-                case GateType::LED:
-                    gate = std::make_shared<LED>(pos, font);
-                    break;
-                case GateType::ROM:
-                    gate = std::make_shared<ROM>(pos, font);
-                    break;
-                case GateType::SEG7:
-                    gate = std::make_shared<Seg7Display>(pos, font);
-                    break;
-                case GateType::LCD:
-                    gate = std::make_shared<LCDDisplay>(pos, font);
-                    break;
-                case GateType::COUNTER:
-                    gate = std::make_shared<Counter>(pos, font);
-                    break;
-                case GateType::REGISTER:
-                    gate = std::make_shared<Register>(pos, font);
-                    break;
-                default:
-                    warning("Unknown gate type: " + gateNode->gateType);
-                    continue;
+            auto gate = GateRegistry::instance().createGate(gateNode->gateType, pos, font);
+            if (!gate) {
+                warning("Unknown gate type: " + gateNode->gateType);
+                continue;
             }
-            if (gate) {
-                result.gates.push_back(gate);
-                gateMap_[gateNode->id] = gate;
-            }
+            result.gates.push_back(gate);
+            gateMap_[gateNode->id] = gate;
         } else if (auto inputNode = std::dynamic_pointer_cast<InputNode>(child)) {
             auto gate = std::make_shared<InputPin>(sf::Vector2f(inputNode->x, inputNode->y), font, inputNode->id);
             result.gates.push_back(gate);
@@ -649,23 +597,9 @@ bool CircuitLanguageParser::generateCircuit(
 }
 
 GateType CircuitLanguageParser::mapGateType(const std::string& typeName, std::string& outLabel) {
-    static const std::map<std::string, GateType> typeMap = {
-        {"AND", GateType::AND}, {"OR", GateType::OR}, {"NOT", GateType::NOT},
-        {"XOR", GateType::XOR}, {"NAND", GateType::NAND}, {"NOR", GateType::NOR},
-        {"XNOR", GateType::XNOR}, {"CLOCK", GateType::CLOCK}, {"POWER", GateType::POWER},
-        {"SWITCH", GateType::SWITCH}, {"BUTTON", GateType::BUTTON}, {"LED", GateType::LED},
-        {"ROM", GateType::ROM}, {"7SEG", GateType::SEG7}, {"SEG7", GateType::SEG7},
-        {"LCD", GateType::LCD}, {"COUNTER", GateType::COUNTER}, {"REGISTER", GateType::REGISTER}
-    };
-    std::string upper = typeName;
-    std::transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
-    auto it = typeMap.find(upper);
-    if (it != typeMap.end()) {
-        outLabel = upper;
-        return it->second;
-    }
-    outLabel = "UNKNOWN";
-    return GateType::AND;
+    GateType t = GateRegistry::instance().stringToType(typeName);
+    outLabel = GateRegistry::instance().getCodeName(t);
+    return t;
 }
 
 bool CircuitLanguageParser::match(CircuitTokenType type) {
@@ -750,4 +684,108 @@ std::shared_ptr<GroupNode> CircuitLanguageParser::parseGroup() {
         return nullptr;
     }
     return node;
+}
+
+std::string CircuitLanguageParser::generateComponentDescription(
+    const std::shared_ptr<Gate>& gate,
+    const std::vector<std::shared_ptr<Gate>>& allGates,
+    const std::vector<Wire>& allWires,
+    const std::string& preferredId) {
+    if (!gate) return "";
+
+    std::map<Gate*, std::string> gateIds;
+    int inputCount = 0, outputCount = 0, gateCount = 0, chipCount = 0;
+    for (const auto& g : allGates) {
+        if (!g) continue;
+        if (g == gate && !preferredId.empty()) {
+            gateIds[g.get()] = preferredId;
+            continue;
+        }
+        std::string id;
+        switch (g->getType()) {
+            case GateType::INPUT_PIN: id = "input_" + std::to_string(inputCount++); break;
+            case GateType::OUTPUT_PIN: id = "output_" + std::to_string(outputCount++); break;
+            case GateType::CHIP: id = "chip_" + std::to_string(chipCount++); break;
+            default: id = "gate_" + std::to_string(gateCount++); break;
+        }
+        gateIds[g.get()] = id;
+    }
+
+    std::string myId = gateIds[gate.get()];
+    if (myId.empty()) myId = preferredId.empty() ? "comp_1" : preferredId;
+
+    std::ostringstream out;
+    sf::Vector2f pos = gate->getPosition();
+
+    switch (gate->getType()) {
+        case GateType::INPUT_PIN:
+            out << "input " << myId << " at (" << pos.x << ", " << pos.y << ")\n";
+            break;
+        case GateType::OUTPUT_PIN:
+            out << "output " << myId << " at (" << pos.x << ", " << pos.y << ")\n";
+            break;
+        case GateType::CHIP:
+            out << "chip " << gate->getChipId() << " " << myId << " at (" << pos.x << ", " << pos.y << ")\n";
+            break;
+        default: {
+            std::string typeName = GateRegistry::instance().getCodeName(gate->getType());
+            out << "gate " << typeName << " " << myId << " at (" << pos.x << ", " << pos.y << ")\n";
+            break;
+        }
+    }
+
+    // Wires connected to this gate
+    for (const auto& wire : allWires) {
+        if (!wire.fromPin || !wire.toPin || !wire.fromPin->parent || !wire.toPin->parent) continue;
+        if (wire.fromPin->parent == gate.get() || wire.toPin->parent == gate.get()) {
+            auto fromIt = gateIds.find(wire.fromPin->parent);
+            auto toIt = gateIds.find(wire.toPin->parent);
+            if (fromIt == gateIds.end() || toIt == gateIds.end()) continue;
+
+            int fromPinIdx = -1, toPinIdx = -1;
+            for (size_t i = 0; i < wire.fromPin->parent->outputs.size(); i++) {
+                if (&wire.fromPin->parent->outputs[i] == wire.fromPin) { fromPinIdx = (int)i; break; }
+            }
+            for (size_t i = 0; i < wire.toPin->parent->inputs.size(); i++) {
+                if (&wire.toPin->parent->inputs[i] == wire.toPin) { toPinIdx = (int)i; break; }
+            }
+            if (fromPinIdx >= 0 && toPinIdx >= 0) {
+                out << "wire " << fromIt->second << "." << fromPinIdx << " -> " << toIt->second << "." << toPinIdx << "\n";
+            }
+        }
+    }
+
+    return out.str();
+}
+
+bool CircuitLanguageParser::applyTextToCircuit(
+    const std::string& source,
+    std::vector<std::shared_ptr<Gate>>& gates,
+    std::vector<Wire>& wires,
+    const sf::Font& font,
+    std::string& errorMessage,
+    std::vector<std::string>& warnings) {
+
+    // First attempt full parse
+    auto fullResult = parse(source, font);
+    if (fullResult.success) {
+        gates = fullResult.gates;
+        wires = fullResult.wires;
+        warnings = fullResult.warnings;
+        return true;
+    }
+
+    // If failed, wrap in anonymous circuit block and retry
+    std::string wrapped = "circuit AutoCircuit {\n" + source + "\n}\n";
+    auto wrappedResult = parse(wrapped, font);
+    if (wrappedResult.success) {
+        gates = wrappedResult.gates;
+        wires = wrappedResult.wires;
+        warnings = wrappedResult.warnings;
+        return true;
+    }
+
+    errorMessage = fullResult.errorMessage.empty() ? wrappedResult.errorMessage : fullResult.errorMessage;
+    warnings = fullResult.warnings;
+    return false;
 }

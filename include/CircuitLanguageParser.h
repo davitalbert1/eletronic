@@ -110,11 +110,30 @@ public:
     CircuitParseResult parse(const std::string& source, const sf::Font& font);
     CircuitParseResult parseFromFile(const std::string& filePath, const sf::Font& font);
 
+    // Parse and apply/merge text into an existing or new circuit
+    // Supports editing/adding multiple components and their connections (wires)
+    bool applyTextToCircuit(
+        const std::string& source,
+        std::vector<std::shared_ptr<Gate>>& gates,
+        std::vector<Wire>& wires,
+        const sf::Font& font,
+        std::string& errorMessage,
+        std::vector<std::string>& warnings
+    );
+
     std::string generateDescription(
         const std::vector<std::shared_ptr<Gate>>& gates,
         const std::vector<Wire>& wires,
         const std::string& circuitName,
         const std::string& description = ""
+    );
+
+    // Generates a CDL text snippet for a single component and its connected wires
+    std::string generateComponentDescription(
+        const std::shared_ptr<Gate>& gate,
+        const std::vector<std::shared_ptr<Gate>>& allGates,
+        const std::vector<Wire>& allWires,
+        const std::string& preferredId = ""
     );
 
     static std::vector<std::string> supportedGateTypes();

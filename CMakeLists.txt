@@ -28,6 +28,7 @@ target_link_libraries(simulator PRIVATE SFML::Graphics SFML::Window SFML::System
 target_include_directories(simulator PRIVATE
     vendor/imgui
     vendor/imgui/backends
+    vendor/imgui/misc/cpp
     vendor/glad/include
 )
 
@@ -37,6 +38,7 @@ target_sources(simulator PRIVATE
     vendor/imgui/imgui_draw.cpp
     vendor/imgui/imgui_tables.cpp
     vendor/imgui/imgui_widgets.cpp
+    vendor/imgui/misc/cpp/imgui_stdlib.cpp
     vendor/imgui/backends/imgui_impl_win32.cpp
     vendor/imgui/backends/imgui_impl_opengl3.cpp
     vendor/glad/src/glad.c

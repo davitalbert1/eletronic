@@ -1954,6 +1954,11 @@ void Workbench::renderUniversalCircuitWindow() {
             ImGui::EndTabItem();
         }
 
+        if (ImGui::BeginTabItem("Testes Automatizados (C++)")) {
+            renderTestRunnerTab();
+            ImGui::EndTabItem();
+        }
+
         if (ImGui::BeginTabItem("Ajuda da Linguagem CDL")) {
             ImGui::TextUnformatted(circuitLanguageParser_.getLanguageHelp().c_str());
             ImGui::EndTabItem();
@@ -2079,4 +2084,52 @@ void Workbench::renderSynthesizerTab() {
             }
         }
     }
+}
+
+#include "tests/TestFramework.h"
+
+void Workbench::renderTestRunnerTab() {
+    ImGui::TextColored(ImVec4(0.2f, 0.8f, 1.0f, 1.0f), "Suíte de Testes Automatizados C++ do Sistema");
+    ImGui::TextWrapped("Execute todos os testes unitários e de integração automatizados em tempo real diretamente dentro do sistema principal. O runner executa a suíte e aponta com precisão o arquivo, linha, expressão avaliada e detalhes de eventuais erros.");
+    ImGui::Separator();
+
+    static char filterBuf[128] = "";
+    ImGui::InputTextWithHint("Filtro de Teste", "Ex: LogicGates, CDL, Synthesizer...", filterBuf, sizeof(filterBuf));
+    ImGui::SameLine();
+
+    if (ImGui::Button("Executar Testes Agora", ImVec2(180, 28))) {
+        std::ostringstream ss;
+        lastTestStatus_ = test::TestRunner::runAll(ss, std::string(filterBuf));
+        testLogOutput_ = ss.str();
+        if (lastTestStatus_ == 0) {
+            statusMessage_ = "Todos os testes automatizados passaram com sucesso!";
+            statusMessageTimer_ = 5.0f;
+        } else {
+            statusMessage_ = "Falha detectada nos testes automatizados! Verifique os detalhes.";
+            statusMessageTimer_ = 6.0f;
+        }
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Limpar Relatório")) {
+        testLogOutput_.clear();
+        lastTestStatus_ = -1;
+    }
+
+    ImGui::Spacing();
+    if (lastTestStatus_ == 0) {
+        ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.3f, 1.0f), "[STATUS]: TODOS OS TESTES PASSARAM COM SUCESSO!");
+    } else if (lastTestStatus_ > 0) {
+        ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "[STATUS]: FALHA! FORAM DETECTADOS ERROS APONTADOS ABAIXO:");
+    } else {
+        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "[STATUS]: Nenhum teste executado nesta sessão ainda.");
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Log e Relatório Detalhado com Apontamento de Erros:");
+    
+    ImVec2 logSize(-FLT_MIN, ImGui::GetContentRegionAvail().y - 20);
+    if (logSize.y < 200) logSize.y = 200;
+
+    ImGui::InputTextMultiline("##test_output_box", &testLogOutput_, logSize, ImGuiInputTextFlags_ReadOnly);
 }

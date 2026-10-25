@@ -366,7 +366,9 @@ public:
     void updateLogic() override {
         outputs[0].state = active_;
     }
-    float getExtraData() const override { return active_ ? 1.0f : 0.0f; }
+    float getExtraData() const override {
+        return active_ ? 1.0f : 0.0f;
+    }
     void setExtraData(float val) override {
         active_ = (val > 0.5f);
         label.setString(active_ ? "CHAVE: ON" : "CHAVE: OFF");
@@ -601,7 +603,9 @@ public:
         outputs[0].state = (pulseCounter_ < 5);
         outputs[1].state = (humidity_ >= 60.0f);
     }
-    float getExtraData() const override { return humidity_; }
+    float getExtraData() const override {
+        return humidity_;
+    }
     void setExtraData(float val) override {
         humidity_ = std::clamp(val, 0.0f, 100.0f);
         updateLabel();
@@ -644,7 +648,9 @@ public:
         outputs[1].state = (mode_ == 2 || mode_ == 3);
         outputs[2].state = (mode_ == 3);
     }
-    float getExtraData() const override { return static_cast<float>(mode_); }
+    float getExtraData() const override {
+        return static_cast<float>(mode_);
+    }
     void setExtraData(float val) override {
         mode_ = static_cast<int>(val) % 4;
         updateLabel();
@@ -896,8 +902,12 @@ public:
             target.draw(wave);
         }
     }
-    float getExtraData() const override { return sounding_ ? 1.0f : 0.0f; }
-    void setExtraData(float val) override { sounding_ = (val > 0.5f); }
+    float getExtraData() const override {
+        return sounding_ ? 1.0f : 0.0f;
+    }
+    void setExtraData(float val) override {
+        sounding_ = (val > 0.5f);
+    }
     std::shared_ptr<Gate> clone(const sf::Font& font) const override {
         return std::make_shared<Buzzer>(getPosition(), font);
     }
@@ -1103,8 +1113,12 @@ public:
             }
         }
     }
-    float getExtraData() const override { return static_cast<float>(pattern_); }
-    void setExtraData(float val) override { pattern_ = static_cast<int>(val) & 0xF; }
+    float getExtraData() const override {
+        return static_cast<float>(pattern_);
+    }
+    void setExtraData(float val) override {
+        pattern_ = static_cast<int>(val) & 0xF;
+    }
     std::shared_ptr<Gate> clone(const sf::Font& font) const override {
         auto g = std::make_shared<OledDisplay>(getPosition(), font);
         g->setExtraData(static_cast<float>(pattern_));
@@ -1138,7 +1152,9 @@ public:
         // Quando pareado, os dados enviados são ecoados na saída sem fio
         outputs[0].state = connected_ && inputs[0].state;
     }
-    float getExtraData() const override { return connected_ ? 1.0f : 0.0f; }
+    float getExtraData() const override {
+        return connected_ ? 1.0f : 0.0f;
+    }
     void setExtraData(float val) override {
         connected_ = (val > 0.5f);
         label.setString(connected_ ? "HC-05: PAIRED" : "HC-05: OFF");

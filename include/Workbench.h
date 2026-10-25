@@ -73,6 +73,7 @@ public:
     void renderInspector();
     void renderUniversalCircuitWindow();
     void renderSynthesizerTab();
+    void renderTestRunnerTab();
     std::shared_ptr<Gate> getSelectedGate();
 
     // Image export
@@ -168,6 +169,12 @@ private:
     std::string synthResultCdl_;
     bool synthIncludeUserChips_ = true;
     int synthSelectedPreset_ = 0;
+
+    // Automated Tests State
+    std::string testLogOutput_;
+    std::string testFilterBuffer_;
+    int lastTestStatus_ = -1; // -1: não rodou, 0: sucesso, 1: falha
+    bool showTestWindow_ = false;
 
     // Image and PDF exporters
     ImageExporter imageExporter_;

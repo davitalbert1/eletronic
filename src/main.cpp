@@ -7,8 +7,30 @@
 #include <string>
 #include "Workbench.h"
 #include "Constants.h"
+#include "tests/TestFramework.h"
 
-int main() {
+int main(int argc, char* argv[]) {
+    // Processamento de flags de linha de comando
+    bool runTestsCli = false;
+    std::string testFilter = "";
+
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--test" || arg == "-t" || arg == "/test") {
+            runTestsCli = true;
+        } else if (arg.rfind("--filter=", 0) == 0) {
+            testFilter = arg.substr(9);
+        } else if (!arg.empty() && arg[0] != '-') {
+            testFilter = arg;
+        }
+    }
+
+    if (runTestsCli) {
+        int testResult = test::TestRunner::runAll(std::cout, testFilter);
+        std::cout.flush();
+        std::cerr.flush();
+        return testResult;
+    }
     sf::RenderWindow window(sf::VideoMode({1200, 800}), "Logic Gate Simulator");
     window.setFramerateLimit(60);
 

@@ -26,16 +26,25 @@ CircuitParseResult CircuitLanguageParser::parse(const std::string& source, const
     auto ast = parseCircuit();
     if (!ast) {
         result.errorMessage = errors_.empty() ? "Failed to parse circuit" : errors_[0];
+        result.warnings = warnings_;
         return result;
     }
 
     if (!generateCircuit(ast, result, font)) {
         result.errorMessage = errors_.empty() ? "Failed to generate circuit" : errors_[0];
+        result.warnings = warnings_;
         return result;
     }
 
-    result.success = true;
+    if (!errors_.empty()) {
+        result.errorMessage = errors_[0];
+        result.warnings = warnings_;
+        result.success = false;
+        return result;
+    }
+
     result.warnings = warnings_;
+    result.success = true;
     return result;
 }
 
@@ -301,24 +310,32 @@ std::vector<Token> CircuitLanguageParser::tokenize(const std::string& source) {
         }
 
         // Numbers
-        if (std::isdigit(c) || (c == '-' && std::isdigit(peekNext()))) {
+        if (std::isdigit(static_cast<unsigned char>(c)) || (c == '-' && std::isdigit(static_cast<unsigned char>(peekNext())))) {
             std::string num;
             if (c == '-') {
                 num += c;
                 advance();
             }
-            while (pos < source.size() && (std::isdigit(source[pos]) || source[pos] == '.')) {
+            while (pos < source.size() && std::isdigit(static_cast<unsigned char>(source[pos]))) {
                 num += source[pos];
                 advance();
+            }
+            if (pos < source.size() && source[pos] == '.' && (pos + 1 < source.size() && std::isdigit(static_cast<unsigned char>(source[pos + 1])))) {
+                num += source[pos];
+                advance();
+                while (pos < source.size() && std::isdigit(static_cast<unsigned char>(source[pos]))) {
+                    num += source[pos];
+                    advance();
+                }
             }
             tokens.emplace_back(CircuitTokenType::NUMBER, num, tokenLine, tokenCol);
             continue;
         }
 
         // Identifiers and keywords
-        if (std::isalpha(c) || c == '_') {
+        if (std::isalpha(static_cast<unsigned char>(c)) || c == '_') {
             std::string ident;
-            while (pos < source.size() && (std::isalnum(source[pos]) || source[pos] == '_')) {
+            while (pos < source.size() && (std::isalnum(static_cast<unsigned char>(source[pos])) || source[pos] == '_')) {
                 ident += source[pos];
                 advance();
             }
@@ -335,12 +352,14 @@ std::vector<Token> CircuitLanguageParser::tokenize(const std::string& source) {
             } else {
                 tokens.emplace_back(CircuitTokenType::IDENTIFIER, ident, tokenLine, tokenCol);
             }
+            continue;
         }
 
         // Skip unrecognized characters
         advance();
     }
 
+    tokens.emplace_back(CircuitTokenType::END_OF_FILE, "", line, column);
     return tokens;
 }
 
@@ -591,7 +610,11 @@ bool CircuitLanguageParser::generateCircuit(
                 wireNode->toPin >= 0 && wireNode->toPin < static_cast<int>(toGate->inputs.size())) {
                 result.wires.push_back(Wire(&fromGate->outputs[wireNode->fromPin], &toGate->inputs[wireNode->toPin]));
             } else {
-                warning("Invalid pin indices for wire: " + wireNode->fromGate + " -> " + wireNode->toGate);
+                std::string errDetail = "Invalid pin indices for wire: " + wireNode->fromGate + "." + std::to_string(wireNode->fromPin) + 
+                    " (outputs: " + std::to_string(fromGate->outputs.size()) + ") -> " + 
+                    wireNode->toGate + "." + std::to_string(wireNode->toPin) + 
+                    " (inputs: " + std::to_string(toGate->inputs.size()) + ")";
+                warning(errDetail);
             }
         }
     }

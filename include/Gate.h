@@ -44,8 +44,41 @@ enum class GateType {
     REGISTER,
     // Componentes de chip personalizado
     INPUT_PIN, // Pino de entrada (marca pino externo do chip)
-    OUTPUT_PIN, // Pino de saÃ­da (marca pino externo do chip)
-    CHIP // InstÃ¢ncia de chip personalizado
+    OUTPUT_PIN, // Pino de saída (marca pino externo do chip)
+    CHIP, // Instância de chip personalizado
+    // Componentes Eletrônicos Básicos & Passivos
+    RESISTOR,
+    CAPACITOR,
+    DIODE,
+    TRANSISTOR_NPN,
+    TRANSISTOR_PNP,
+    MOSFET_N,
+    MOSFET_P,
+    POTENTIOMETER,
+    TACTILE_BUTTON,
+    TOGGLE_SWITCH,
+    // Sensores
+    LDR,
+    THERMISTOR,
+    REED_SWITCH,
+    ULTRASONIC_SENSOR,
+    DHT22_SENSOR,
+    ACCELEROMETER,
+    PIR_SENSOR,
+    MQ2_GAS_SENSOR,
+    SOUND_SENSOR,
+    IR_SENSOR,
+    SOIL_MOISTURE_SENSOR,
+    // Atuadores & Saídas
+    BUZZER,
+    RELAY,
+    SERVO_MOTOR,
+    DC_MOTOR,
+    MOTOR_DRIVER_L298N,
+    OLED_DISPLAY,
+    // Módulos de Comunicação Sem Fio
+    BLUETOOTH_MODULE,
+    WIFI_MODULE
 };
 
 class Gate {

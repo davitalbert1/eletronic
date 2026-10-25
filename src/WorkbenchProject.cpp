@@ -1,4 +1,5 @@
 #include "WorkbenchProject.h"
+#include "GateRegistry.h"
 #include <algorithm>
 #include <cstdint>
 #include <windows.h>
@@ -124,63 +125,10 @@ bool WorkbenchProject::loadProject(const fs::path& p,
         // Tenta ler rotação (formato antigo não tem rotation)
         iss >> rotation; // se falhar, rotation fica 0.0f (default)
 
-        if (t < 0 || t > 16) continue;
+        if (t < 0) continue;
 
         sf::Vector2f pos(x, y);
-        std::shared_ptr<Gate> newGate;
-            switch ((GateType)t) {
-                case GateType::AND:
-                    newGate = std::make_shared<ANDGate>(pos, font);
-                    break;
-                case GateType::OR:
-                    newGate = std::make_shared<ORGate>(pos, font);
-                    break;
-                case GateType::NOT:
-                    newGate = std::make_shared<NOTGate>(pos, font);
-                    break;
-                case GateType::XOR:
-                    newGate = std::make_shared<XORGate>(pos, font);
-                    break;
-                case GateType::NAND:
-                    newGate = std::make_shared<NANDGate>(pos, font);
-                    break;
-                case GateType::NOR:
-                    newGate = std::make_shared<NORGate>(pos, font);
-                    break;
-                case GateType::XNOR:
-                    newGate = std::make_shared<XNORGate>(pos, font);
-                    break;
-                case GateType::CLOCK:
-                    newGate = std::make_shared<ClockGate>(pos, font);
-                    break;
-                case GateType::POWER:
-                    newGate = std::make_shared<PowerSource>(pos, font);
-                    break;
-                case GateType::SWITCH:
-                    newGate = std::make_shared<Switch>(pos, font);
-                    break;
-                case GateType::BUTTON:
-                    newGate = std::make_shared<Button>(pos, font);
-                    break;
-                case GateType::LED:
-                    newGate = std::make_shared<LED>(pos, font);
-                    break;
-                case GateType::ROM:
-                    newGate = std::make_shared<ROM>(pos, font);
-                    break;
-                case GateType::SEG7:
-                    newGate = std::make_shared<Seg7Display>(pos, font);
-                    break;
-                case GateType::LCD:
-                    newGate = std::make_shared<LCDDisplay>(pos, font);
-                    break;
-                case GateType::COUNTER:
-                    newGate = std::make_shared<Counter>(pos, font);
-                    break;
-                case GateType::REGISTER:
-                    newGate = std::make_shared<Register>(pos, font);
-                    break;
-            }
+        std::shared_ptr<Gate> newGate = GateRegistry::instance().createGate((GateType)t, pos, font);
         if (newGate) {
             newGate->setExtraData(extra);
             if (rotation != 0.0f) newGate->setRotation(rotation);

@@ -1,15 +1,6 @@
 ﻿#include "Gate.h"
 #include "GateRegistry.h"
 #include <string>
-#include <array>
-
-// Labels for each GateType (order must match GateType enum)
-static const std::array<std::string, 20> GateLabels = {
-    "AND", "OR", "NOT", "CLOCK", "POWER",
-    "XOR", "NAND", "NOR", "XNOR", "ROM",
-    "7SEG", "LCD", "LED", "SWITCH", "BUTTON",
-    "COUNTER", "REG", "IN", "OUT", "CHIP"
-};
 
 // Pin implementation
 Pin::Pin(PinType t, sf::Vector2f o, Gate* p) : type(t), offset(o), parent(p) {

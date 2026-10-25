@@ -1,5 +1,6 @@
 #include "DigitalLogicSimImporter.h"
 #include "LogicEntities.h"
+#include "GateRegistry.h"
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -257,67 +258,12 @@ bool DigitalLogicSimImporter::createGates(const DLSProject& project,
         float extra = 0.0f;
         GateType gt = mapComponentType(dlsComp, label, extra);
 
-        // Cria o gate na posição do DLS
+        // Cria o gate usando o GateRegistry
         sf::Vector2f pos(dlsComp.x, dlsComp.y);
-        std::shared_ptr<Gate> gate;
-
-        switch (gt) {
-            case GateType::AND:
-                gate = std::make_shared<ANDGate>(pos, font);
-                break;
-            case GateType::OR:
-                gate = std::make_shared<ORGate>(pos, font);
-                break;
-            case GateType::NOT:
-                gate = std::make_shared<NOTGate>(pos, font);
-                break;
-            case GateType::XOR:
-                gate = std::make_shared<XORGate>(pos, font);
-                break;
-            case GateType::NAND:
-                gate = std::make_shared<NANDGate>(pos, font);
-                break;
-            case GateType::NOR:
-                gate = std::make_shared<NORGate>(pos, font);
-                break;
-            case GateType::XNOR:
-                gate = std::make_shared<XNORGate>(pos, font);
-                break;
-            case GateType::CLOCK:
-                gate = std::make_shared<ClockGate>(pos, font);
-                break;
-            case GateType::POWER:
-                gate = std::make_shared<PowerSource>(pos, font);
-                break;
-            case GateType::SWITCH:
-                gate = std::make_shared<Switch>(pos, font);
-                break;
-            case GateType::BUTTON:
-                gate = std::make_shared<Button>(pos, font);
-                break;
-            case GateType::LED:
-                gate = std::make_shared<LED>(pos, font);
-                break;
-            case GateType::ROM:
-                gate = std::make_shared<ROM>(pos, font);
-                break;
-            case GateType::SEG7:
-                gate = std::make_shared<Seg7Display>(pos, font);
-                break;
-            case GateType::LCD:
-                gate = std::make_shared<LCDDisplay>(pos, font);
-                break;
-            case GateType::COUNTER:
-                gate = std::make_shared<Counter>(pos, font);
-                break;
-            case GateType::REGISTER:
-                gate = std::make_shared<Register>(pos, font);
-                break;
-            default:
-                // Componente não suportado: adiciona à lista e usa AND como fallback
-                unsupported.push_back(dlsComp.type + " (\"" + dlsComp.label + "\")");
-                gate = std::make_shared<ANDGate>(pos, font);
-                break;
+        std::shared_ptr<Gate> gate = GateRegistry::instance().createGate(gt, pos, font);
+        if (!gate) {
+            unsupported.push_back(dlsComp.type + " (\"" + dlsComp.label + "\")");
+            gate = std::make_shared<ANDGate>(pos, font);
         }
 
         if (gate) {

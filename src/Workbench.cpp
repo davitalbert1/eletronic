@@ -4,9 +4,11 @@
 #include <imgui.h>
 #include "misc/cpp/imgui_stdlib.h"
 #include "GateRegistry.h"
+#include "ElectronicEntities.h"
 #include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <cstdint>
+#include <cctype>
 #include <windows.h>
 #include <ctime>
 #include <chrono>
@@ -73,6 +75,43 @@ void Workbench::refreshChipPalette() {
     // Marcadores de pino (necessários para criar chips)
     add(std::make_shared<InputPin>(sf::Vector2f(0, 0), font_, "IN"));
     add(std::make_shared<OutputPin>(sf::Vector2f(0, 0), font_, "OUT"));
+
+    // Componentes Eletrônicos Básicos & Passivos
+    add(std::make_shared<Resistor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Capacitor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Diode>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<TransistorNPN>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<TransistorPNP>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<MosfetN>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<MosfetP>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Potentiometer>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<TactileButton>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<ToggleSwitch>(sf::Vector2f(0, 0), font_));
+
+    // Sensores
+    add(std::make_shared<LdrSensor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Thermistor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<ReedSwitch>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<UltrasonicSensor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Dht22Sensor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Accelerometer>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<PirSensor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Mq2GasSensor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<SoundSensor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<IrSensor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<SoilMoistureSensor>(sf::Vector2f(0, 0), font_));
+
+    // Atuadores & Saídas
+    add(std::make_shared<Buzzer>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Relay>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<ServoMotor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<DCMotor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<MotorDriverL298N>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<OledDisplay>(sf::Vector2f(0, 0), font_));
+
+    // Módulos Sem Fio
+    add(std::make_shared<BluetoothModule>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<WifiModule>(sf::Vector2f(0, 0), font_));
 
     // Chips registrados na biblioteca
     for (auto& def : chip::ChipLibrary::instance().all()) {
@@ -163,8 +202,7 @@ void Workbench::updateChipFromCurrent(const std::string& id) {
         for (size_t i = 0; i < w.toPin->parent->inputs.size(); ++i)
             if (&w.toPin->parent->inputs[i] == w.toPin) pTo = (int)i;
         if (gFrom >= 0 && gTo >= 0 && pFrom >= 0 && pTo >= 0)
-            circuit->wires.emplace_back(&circuit->gates[gFrom]->outputs[pFrom],
-                                        &circuit->gates[gTo]->inputs[pTo]);
+            circuit->wires.emplace_back(&circuit->gates[gFrom]->outputs[pFrom], &circuit->gates[gTo]->inputs[pTo]);
     }
     def->circuit = circuit;
     def->refreshFromCircuit();
@@ -189,9 +227,7 @@ void Workbench::loadAllChipsFromDisk() {
     for (const auto& entry : fs::directory_iterator(dir)) {
         if (entry.is_regular_file() && entry.path().extension() == ".chip") {
             auto def = chip::loadChipDefinition(entry.path().string(), font_);
-            if (def && def->isValid()) {
-                chip::ChipLibrary::instance().registerChip(def);
-            }
+            if (def && def->isValid()) chip::ChipLibrary::instance().registerChip(def);
         }
     }
 }
@@ -224,10 +260,9 @@ bool Workbench::deleteChip(const std::string& id) {
     chip::ChipLibrary::instance().unregister(id);
 
     // Remove from placed gates if present
-    placedGates_.erase(std::remove_if(placedGates_.begin(), placedGates_.end(),
-        [&](const std::shared_ptr<Gate>& g) {
-            return g->getType() == GateType::CHIP && g->getChipId() == id;
-        }), placedGates_.end());
+    placedGates_.erase(std::remove_if(placedGates_.begin(), placedGates_.end(), [&](const std::shared_ptr<Gate>& g) {
+        return g->getType() == GateType::CHIP && g->getChipId() == id;
+    }), placedGates_.end());
 
     // Clean broken wires
     wires_.erase(std::remove_if(wires_.begin(), wires_.end(),
@@ -242,9 +277,7 @@ bool Workbench::deleteChip(const std::string& id) {
 
     // Delete file from disk
     fs::path p = fs::path("projetos/chips") / (id + ".chip");
-    if (fs::exists(p)) {
-        fs::remove(p);
-    }
+    if (fs::exists(p)) fs::remove(p);
 
     refreshChipPalette();
     statusMessage_ = "Chip '" + name + "' excluído da biblioteca e do disco.";
@@ -296,6 +329,44 @@ void Workbench::setupPalette() {
     add(std::make_shared<LCDDisplay>(sf::Vector2f(0, 0), font_));
     add(std::make_shared<Counter>(sf::Vector2f(0, 0), font_));
     add(std::make_shared<Register>(sf::Vector2f(0, 0), font_));
+
+    // Componentes Eletrônicos Básicos & Passivos
+    add(std::make_shared<Resistor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Capacitor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Diode>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<TransistorNPN>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<TransistorPNP>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<MosfetN>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<MosfetP>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Potentiometer>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<TactileButton>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<ToggleSwitch>(sf::Vector2f(0, 0), font_));
+
+    // Sensores
+    add(std::make_shared<LdrSensor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Thermistor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<ReedSwitch>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<UltrasonicSensor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Dht22Sensor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Accelerometer>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<PirSensor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Mq2GasSensor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<SoundSensor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<IrSensor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<SoilMoistureSensor>(sf::Vector2f(0, 0), font_));
+
+    // Atuadores & Saídas
+    add(std::make_shared<Buzzer>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<Relay>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<ServoMotor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<DCMotor>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<MotorDriverL298N>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<OledDisplay>(sf::Vector2f(0, 0), font_));
+
+    // Comunicação Sem Fio
+    add(std::make_shared<BluetoothModule>(sf::Vector2f(0, 0), font_));
+    add(std::make_shared<WifiModule>(sf::Vector2f(0, 0), font_));
+
     updatePalettePositions();
 }
 
@@ -346,7 +417,22 @@ void Workbench::draw(sf::RenderWindow& window) {
 
     // Draw selection rectangle
     if (input_.getState().isSelecting) {
-        // selectionRect would be drawn here
+        const auto& state = input_.getState();
+        float x = std::min(state.selectStart.x, mousePosF.x);
+        float y = std::min(state.selectStart.y, mousePosF.y);
+        float w = (state.selectStart.x < mousePosF.x)
+                      ? (mousePosF.x - state.selectStart.x)
+                      : (state.selectStart.x - mousePosF.x);
+        float h = (state.selectStart.y < mousePosF.y)
+                      ? (mousePosF.y - state.selectStart.y)
+                      : (state.selectStart.y - mousePosF.y);
+
+        sf::RectangleShape selectionRect({w, h});
+        selectionRect.setPosition({x, y});
+        selectionRect.setFillColor(Config::SelectionRectFill);
+        selectionRect.setOutlineColor(Config::SelectionRectOutline);
+        selectionRect.setOutlineThickness(Config::SelectionRectOutlineThickness);
+        window.draw(selectionRect);
     }
 
     // Draw groups
@@ -749,9 +835,7 @@ void Workbench::handleEvent(const sf::Event& event, const sf::RenderWindow& wind
                     ofn.lpstrFilter = "JSON Files\0*.json\0All Files\0*.*\0";
                     ofn.nFilterIndex = 1;
                     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-                    if (GetOpenFileNameA(&ofn)) {
-                        importDigitalLogicSimProject(szFile);
-                    }
+                    if (GetOpenFileNameA(&ofn)) importDigitalLogicSimProject(szFile);
                     return;
                 }
             }
@@ -988,13 +1072,9 @@ void Workbench::renderImGui() {
                 }
             }
             ImGui::SameLine();
-            if (ImGui::Button("Carregar p/ Editar")) {
-                loadChipForEditing(ch->id);
-            }
+            if (ImGui::Button("Carregar p/ Editar")) loadChipForEditing(ch->id);
             ImGui::SameLine();
-            if (ImGui::Button("Atualizar")) {
-                updateChipFromCurrent(ch->id);
-            }
+            if (ImGui::Button("Atualizar")) updateChipFromCurrent(ch->id);
             ImGui::SameLine();
             if (ImGui::Button("Deletar")) {
                 deleteChip(ch->id);
@@ -1091,11 +1171,64 @@ void Workbench::drawHelpOverlay(sf::RenderWindow& window) {
 }
 
 void Workbench::applySort() {
-    // Sort implementation
+    // Ordena projetos: estrelados primeiro, depois ordem alfabética pelo nome.
+    std::sort(projectInfos_.begin(), projectInfos_.end(),
+        [](const ProjectInfo& a, const ProjectInfo& b) {
+            if (a.starred != b.starred) return a.starred > b.starred;
+
+            std::string na = a.name;
+            std::string nb = b.name;
+            std::transform(na.begin(), na.end(), na.begin(), [](unsigned char c) {
+                return static_cast<char>(std::tolower(c));
+            });
+            std::transform(nb.begin(), nb.end(), nb.begin(), [](unsigned char c) {
+                return static_cast<char>(std::tolower(c));
+            });
+            return na < nb;
+        });
 }
 
 void Workbench::applySearch() {
-    // Search implementation
+    // Filtra a lista de projetos pelo texto digitado no modal de carregar.
+    // Quando o buffer fica vazio, refreshProjectList() (chamado no Escape)
+    // restaura a lista completa do disco.
+    if (searchBuffer_.empty()) return;
+
+    std::string needle = searchBuffer_;
+    std::transform(needle.begin(), needle.end(), needle.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
+
+    auto containsIgnoreCase = [&](const std::string& text) {
+        std::string t = text;
+        std::transform(t.begin(), t.end(), t.begin(), [](unsigned char c) {
+            return static_cast<char>(std::tolower(c));
+        });
+        return t.find(needle) != std::string::npos;
+    };
+
+    auto matches = [&](const ProjectInfo& info) {
+        if (containsIgnoreCase(info.name)) return true;
+        if (containsIgnoreCase(info.category)) return true;
+        if (containsIgnoreCase(info.description)) return true;
+        for (const auto& tag : info.tags) {
+            if (containsIgnoreCase(tag)) return true;
+        }
+        return false;
+    };
+
+    projectInfos_.erase(
+        std::remove_if(projectInfos_.begin(), projectInfos_.end(), [&](const ProjectInfo& info) {
+            return !matches(info);
+        }),
+        projectInfos_.end());
+
+    // Ajusta a seleção caso o índice apontado tenha saído do intervalo filtrado.
+    if (!projectInfos_.empty() && selectedProjectIndex_ >= projectInfos_.size()) {
+        selectedProjectIndex_ = projectInfos_.size() - 1;
+    } else if (projectInfos_.empty()) {
+        selectedProjectIndex_ = 0;
+    }
 }
 
 std::string Workbench::sortOrderLabel() const {
@@ -1356,8 +1489,7 @@ void Workbench::importFromCircuitLanguage(const std::string& filePath) {
 }
 
 void Workbench::exportToCircuitLanguage(const std::string& filePath) {
-    std::string description = circuitLanguageParser_.generateDescription(
-        placedGates_, wires_, currentProjectName_, currentDescription_);
+    std::string description = circuitLanguageParser_.generateDescription(placedGates_, wires_, currentProjectName_, currentDescription_);
     std::ofstream file(filePath);
     if (!file.is_open()) {
         statusMessage_ = "Erro ao exportar: " + filePath;
@@ -1532,7 +1664,23 @@ void Workbench::renderInspector() {
         {GateType::SWITCH, "Chave Liga/Desliga"}, {GateType::BUTTON, "Botao Pulsador"}, {GateType::LED, "LED Indicador"},
         {GateType::ROM, "Memoria ROM"}, {GateType::SEG7, "Display 7 Segmentos"}, {GateType::LCD, "Display LCD"},
         {GateType::COUNTER, "Contador 4-bits"}, {GateType::REGISTER, "Registrador 4-bits"},
-        {GateType::INPUT_PIN, "Pino de Entrada"}, {GateType::OUTPUT_PIN, "Pino de Saida"}, {GateType::CHIP, "Chip Personalizado"}
+        {GateType::INPUT_PIN, "Pino de Entrada"}, {GateType::OUTPUT_PIN, "Pino de Saida"}, {GateType::CHIP, "Chip Personalizado"},
+        // Componentes Eletrônicos
+        {GateType::RESISTOR, "Resistor"}, {GateType::CAPACITOR, "Capacitor"}, {GateType::DIODE, "Diodo Semicondutor"},
+        {GateType::TRANSISTOR_NPN, "Transistor NPN (BJT)"}, {GateType::TRANSISTOR_PNP, "Transistor PNP (BJT)"},
+        {GateType::MOSFET_N, "MOSFET Canal N"}, {GateType::MOSFET_P, "MOSFET Canal P"},
+        {GateType::POTENTIOMETER, "Potenciometro"}, {GateType::TACTILE_BUTTON, "Botao Tatil (Push-Button)"},
+        {GateType::TOGGLE_SWITCH, "Chave Alavanca/Gangorra"},
+        {GateType::LDR, "Sensor de Luz (LDR)"}, {GateType::THERMISTOR, "Termistor (NTC)"},
+        {GateType::REED_SWITCH, "Sensor Magnetico (Reed Switch)"}, {GateType::ULTRASONIC_SENSOR, "Sensor Ultrassonico (HC-SR04)"},
+        {GateType::DHT22_SENSOR, "Sensor de Temp/Umidade (DHT22)"}, {GateType::ACCELEROMETER, "Acelerometro/Giroscopio (MPU6050)"},
+        {GateType::PIR_SENSOR, "Sensor de Presenca (PIR)"}, {GateType::MQ2_GAS_SENSOR, "Sensor de Gas e Fumaca (MQ-2)"},
+        {GateType::SOUND_SENSOR, "Sensor de Som / Palma"}, {GateType::IR_SENSOR, "Sensor Infravermelho (Obstaculo)"},
+        {GateType::SOIL_MOISTURE_SENSOR, "Sensor de Umidade do Solo"},
+        {GateType::BUZZER, "Buzzer Sonoro"}, {GateType::RELAY, "Modulo Rele Eletromecanico"},
+        {GateType::SERVO_MOTOR, "Servomotor Angular"}, {GateType::DC_MOTOR, "Motor DC"},
+        {GateType::MOTOR_DRIVER_L298N, "Driver de Motor (Ponte H L298N)"}, {GateType::OLED_DISPLAY, "Display Grafico OLED SSD1306"},
+        {GateType::BLUETOOTH_MODULE, "Modulo Bluetooth (HC-05)"}, {GateType::WIFI_MODULE, "Modulo WiFi (ESP8266)"}
     };
     auto typeIt = typeLabels.find(selected->getType());
     std::string typeName = typeIt != typeLabels.end() ? typeIt->second : "Componente Generico";
@@ -1557,9 +1705,7 @@ void Workbench::renderInspector() {
     }
 
     float rot = selected->getRotation();
-    if (ImGui::SliderFloat("Rotacao", &rot, 0.0f, 360.0f, "%.0f deg")) {
-        selected->setRotation(rot);
-    }
+    if (ImGui::SliderFloat("Rotacao", &rot, 0.0f, 360.0f, "%.0f deg")) selected->setRotation(rot);
 
     // Extra Data / Internal States
     float extra = selected->getExtraData();
@@ -1569,14 +1715,48 @@ void Workbench::renderInspector() {
         }
     } else if (selected->getType() == GateType::POWER || selected->getType() == GateType::SWITCH) {
         bool state = extra > 0.5f;
-        if (ImGui::Checkbox("Estado Ativo", &state)) {
-            selected->setExtraData(state ? 1.0f : 0.0f);
-        }
+        if (ImGui::Checkbox("Estado Ativo", &state)) selected->setExtraData(state ? 1.0f : 0.0f);
     } else if (selected->getType() == GateType::COUNTER || selected->getType() == GateType::REGISTER) {
         int val = static_cast<int>(extra);
-        if (ImGui::InputInt("Valor Inicial", &val)) {
-            selected->setExtraData(static_cast<float>(val));
+        if (ImGui::InputInt("Valor Inicial", &val)) selected->setExtraData(static_cast<float>(val));
+    } else if (selected->getType() == GateType::RESISTOR) {
+        if (ImGui::DragFloat("Resistencia (Ohms)", &extra, 10.0f, 1.0f, 1000000.0f, "%.0f Ohms")) {
+            selected->setExtraData(extra);
         }
+    } else if (selected->getType() == GateType::CAPACITOR) {
+        if (ImGui::DragFloat("Capacitancia (uF)", &extra, 1.0f, 0.1f, 10000.0f, "%.1f uF")) {
+            selected->setExtraData(extra);
+        }
+    } else if (selected->getType() == GateType::POTENTIOMETER || selected->getType() == GateType::LDR || selected->getType() == GateType::SOIL_MOISTURE_SENSOR) {
+        float pct = extra * 100.0f;
+        if (ImGui::SliderFloat("Nivel / Porcentagem (%)", &pct, 0.0f, 100.0f, "%.0f %%")) {
+            selected->setExtraData(pct / 100.0f);
+        }
+    } else if (selected->getType() == GateType::THERMISTOR) {
+        if (ImGui::SliderFloat("Temperatura (C)", &extra, -20.0f, 150.0f, "%.1f C")) {
+            selected->setExtraData(extra);
+        }
+    } else if (selected->getType() == GateType::ULTRASONIC_SENSOR) {
+        if (ImGui::SliderFloat("Distancia Alvo (cm)", &extra, 2.0f, 400.0f, "%.0f cm")) {
+            selected->setExtraData(extra);
+        }
+    } else if (selected->getType() == GateType::DHT22_SENSOR) {
+        if (ImGui::SliderFloat("Umidade Relativa (%)", &extra, 0.0f, 100.0f, "%.0f %%")) {
+            selected->setExtraData(extra);
+        }
+    } else if (selected->getType() == GateType::MQ2_GAS_SENSOR) {
+        if (ImGui::DragFloat("Concentracao de Gas (ppm)", &extra, 10.0f, 0.0f, 2000.0f, "%.0f ppm")) {
+            selected->setExtraData(extra);
+        }
+    } else if (selected->getType() == GateType::SERVO_MOTOR) {
+        if (ImGui::SliderFloat("Angulo do Servo", &extra, 0.0f, 180.0f, "%.0f deg")) {
+            selected->setExtraData(extra);
+        }
+    } else if (selected->getType() == GateType::TOGGLE_SWITCH || selected->getType() == GateType::REED_SWITCH ||
+               selected->getType() == GateType::IR_SENSOR || selected->getType() == GateType::BLUETOOTH_MODULE ||
+               selected->getType() == GateType::WIFI_MODULE) {
+        bool state = extra > 0.5f;
+        if (ImGui::Checkbox("Habilitado / Ativo", &state)) selected->setExtraData(state ? 1.0f : 0.0f);
     }
 
     // Pins and Signals status
@@ -1603,9 +1783,7 @@ void Workbench::renderInspector() {
             selected, placedGates_, wires_, "");
     }
     ImGui::SameLine();
-    if (ImGui::Button("Copiar CDL")) {
-        ImGui::SetClipboardText(inspectorTextBuffer_.c_str());
-    }
+    if (ImGui::Button("Copiar CDL")) ImGui::SetClipboardText(inspectorTextBuffer_.c_str());
 
     ImGui::InputTextMultiline("##inspector_cdl", &inspectorTextBuffer_,
                              ImVec2(-FLT_MIN, 130),
@@ -1819,9 +1997,7 @@ void Workbench::renderSynthesizerTab() {
 
             // Format processing expressions
             std::ostringstream ssProc;
-            for (const auto& kv : cfg.targetExpressions) {
-                ssProc << kv.first << " = " << kv.second << "\n";
-            }
+            for (const auto& kv : cfg.targetExpressions) ssProc << kv.first << " = " << kv.second << "\n";
             synthProcessBuffer_ = ssProc.str();
 
             // Format allowed gates
@@ -1856,9 +2032,7 @@ void Workbench::renderSynthesizerTab() {
         rawConfig += "NAME = " + (currentProjectName_.empty() ? "Sintetizado" : currentProjectName_) + "\n";
 
         SynthesisConfig cfg = CircuitSynthesizer::parseConfig(rawConfig);
-        if (!synthIncludeUserChips_) {
-            cfg.allowedChips = {"__NONE__"};
-        }
+        if (!synthIncludeUserChips_) cfg.allowedChips = {"__NONE__"};
 
         CircuitCandidate cand = synthesizer_.synthesize(cfg, font_);
         synthResultSummary_ = cand.summary;

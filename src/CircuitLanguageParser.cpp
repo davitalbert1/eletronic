@@ -154,10 +154,13 @@ Syntax:
     wire <from_gate>.<from_pin> -> <to_gate>.<to_pin>
   }
 
-Supported Gate Types:
-  AND, OR, NOT, XOR, NAND, NOR, XNOR
-  CLOCK, POWER, SWITCH, BUTTON, LED
-  ROM, 7SEG, LCD, COUNTER, REGISTER
+Supported Gate & Component Types:
+  Logic: AND, OR, NOT, XOR, NAND, NOR, XNOR
+  Basic: CLOCK, POWER, SWITCH, BUTTON, LED, ROM, 7SEG, LCD, COUNTER, REGISTER
+  Passives & Discrete: RESISTOR, CAPACITOR, DIODE, TRANSISTOR_NPN, TRANSISTOR_PNP, MOSFET_N, MOSFET_P, POTENTIOMETER, TACTILE_BUTTON, TOGGLE_SWITCH
+  Sensors: LDR, THERMISTOR, REED_SWITCH, ULTRASONIC, DHT22, ACCELEROMETER, PIR, MQ2, SOUND_SENSOR, IR_SENSOR, SOIL_MOISTURE
+  Actuators: BUZZER, RELAY, SERVO, DC_MOTOR, L298N, OLED
+  Wireless: BLUETOOTH, WIFI
 
 Example:
   circuit MyFirstCircuit "A simple circuit"
@@ -703,10 +706,18 @@ std::string CircuitLanguageParser::generateComponentDescription(
         }
         std::string id;
         switch (g->getType()) {
-            case GateType::INPUT_PIN: id = "input_" + std::to_string(inputCount++); break;
-            case GateType::OUTPUT_PIN: id = "output_" + std::to_string(outputCount++); break;
-            case GateType::CHIP: id = "chip_" + std::to_string(chipCount++); break;
-            default: id = "gate_" + std::to_string(gateCount++); break;
+            case GateType::INPUT_PIN:
+                id = "input_" + std::to_string(inputCount++);
+                break;
+            case GateType::OUTPUT_PIN:
+                id = "output_" + std::to_string(outputCount++);
+                break;
+            case GateType::CHIP:
+                id = "chip_" + std::to_string(chipCount++);
+                break;
+            default:
+                id = "gate_" + std::to_string(gateCount++);
+                break;
         }
         gateIds[g.get()] = id;
     }
